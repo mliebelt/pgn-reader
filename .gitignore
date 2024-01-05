@@ -1,6 +1,2 @@
-.idea
-.vscode
-.ftppass
-.ftpauth
-**/Thumbs.db
-node_modules
+lib/*
+/lib-esm/
