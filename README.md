@@ -5,7 +5,7 @@
 
 # In a Nutshell
 
-pgn-reader is up to now only used by pgn-viewer. You will find the detailed documentation about pgn-viewer (formerly named PgnViewerJS, which is a bad name for NPM) in the [top-level directory](../../readme.md).
+pgn-reader is the backend for pgn-viewer, and only used by it. It should be usable by itself to read and play through a game, though. It should at least be usable to perform some checks on a game read.
 
 ## How to Install
 
@@ -18,4 +18,4 @@ pgn-reader is up to now only used by pgn-viewer. You will find the detailed docu
 
 ## How to Use
 
-See `pgn-viewer` how to use it.
+**To be written**
