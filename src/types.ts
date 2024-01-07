@@ -20,3 +20,9 @@ export type PgnReaderConfiguration = {
 }
 
 export type Shape = { brush: string, orig: Field, dest?: Field }
+
+export type FEN = string
+
+export type SAN = string
+
+export type NAGs = string
