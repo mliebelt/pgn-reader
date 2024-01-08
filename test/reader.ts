@@ -53,7 +53,7 @@ describe("Base functionality of the reader without any configuration", function 
         should.equal(move.commentAfter,"AFTER")
         should.equal(move.notation.notation,"d4")
     })
-
+// The following tests were not migrated ... until the next comment
     it("should understand comments for variation with white", function() {
         reader = new PgnReader({pgn: "1. d4 ({START} 1. e4 {AFTER} e5) 1... d5"})
         let var_first = reader.getMove(0).variations[0]
@@ -162,6 +162,7 @@ describe("When using all kind of configuration in the reader", function () {
         should.equal(reader.getMoves().length,2)
         should.equal(reader.getGames().length,2)
     })
+    // This is the end of not migrated tests
     it("should emmit an error when reading many games with `manyGames == true`", function () {
         expect(function() {new PgnReader({pgn: 'e4 e5 *\n\nd4 d5 *'})})
             .to.throw('Expected end of input or whitespace but "d" found.')

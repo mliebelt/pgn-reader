@@ -4,6 +4,7 @@ import * as assert from 'uvu/assert';
 import {PgnReader, Shape} from '../src';
 import {readFile} from "../lib/fetch";
 import {PgnReaderMove} from "@mliebelt/pgn-types";
+import {expect} from "chai";
 
 const reader = suite('Base functionality of the reader without any configuration');
 
@@ -65,13 +66,123 @@ reader('should understand game comment and after comment in principle', () => {
     assert.is(move.notation.notation, 'd4');
 });
 
-reader('should emmit an error when reading many games with `manyGames == true`', () => {
+reader("should understand comments for variation with white", function() {
+    const reader = new PgnReader({pgn: "1. d4 ({START} 1. e4 {AFTER} e5) 1... d5"})
+    const var_first = reader.getMove(0).variations[0]
+    assert.is(var_first.commentMove,"START")
+    assert.is(var_first.commentAfter,"AFTER")
+    assert.is(var_first.notation.notation,"e4")
+})
+
+reader("should read all sorts of comments", function() {
+    const reader = new PgnReader({pgn: "{Before move} 1. e4 {After move}"})
+    const first = reader.getMove(0)
+    assert.is(reader.getGameComment().comment,"Before move")
+    assert.is(first.commentAfter,"After move")
+})
+
+reader("should ignore empty comments #211", function () {
+    const reader = new PgnReader({pgn: "e4 { [%csl Gf6] }"})
+    const move = reader.getMove(0)
+    assert.ok(move)
+    assert.is(move.commentDiag.colorFields.length,1)
+    assert.is(move.commentDiag.colorFields[0],"Gf6")
+    assert.is(move.commentAfter, undefined)
+})
+
+reader ("should understand format of diagram circles", function() {
+    const reader = new PgnReader({pgn: "1. e4 {[%csl Ya4, Gb4,Rc4]}"})
+    const first = reader.getMove(0)
+    assert.is(first.commentDiag.colorFields.length,3)
+    assert.is(first.commentDiag.colorFields[0],"Ya4")
+    assert.is(first.commentDiag.colorFields[1],"Gb4")
+    assert.is(first.commentDiag.colorFields[2],"Rc4")
+})
+
+reader ("should understand format of diagram arrows", function() {
+    const reader = new PgnReader({pgn: "1. e4 {[%cal Ya4b2, Gb4h8,Rc4c8]}"})
+    const first = reader.getMove(0)
+    assert.is(first.commentDiag.colorArrows.length,3)
+    assert.is(first.commentDiag.colorArrows[0],"Ya4b2")
+    assert.is(first.commentDiag.colorArrows[1],"Gb4h8")
+    assert.is(first.commentDiag.colorArrows[2],"Rc4c8")
+})
+
+reader ("should understand both circles and arrows", function() {
+    const reader = new PgnReader({pgn: "e4 {[%csl Yf4,Gg5,Gd4,Rc4,Bb4,Ya4][%cal Gg1f3,Rf1c4,Gh2h4,Rg2g4,Bf2f4,Ye2e4]}"})
+    const first = reader.getMove(0)
+    assert.is(first.commentDiag.colorArrows.length,6)
+    assert.is(first.commentDiag.colorFields.length,6)
+})
+
+reader ("should be able to read additional tags and keep them", function () {
+    const reader = new PgnReader({ pgn: '[White "Me"] [Black "Magnus"] e4 e5'})
+    assert.is(reader.getMoves().length,2)
+    const tags = reader.getTags()
+    assert.is(tags.get('White'),"Me")
+    assert.is(tags.get('Black'),"Magnus")
+})
+
+reader("should read nags", function() {
+    const reader = new PgnReader({pgn: "1. e4! e5? 2. Nf3!! Nc6?? 3. Bb5?! a6!?"})
+    const moves = reader.getMoves()
+    assert.is(moves.length,6)
+    assert.is(moves[0].nag[0],"$1")
+    assert.is(moves[1].nag[0],"$2")
+    assert.is(moves[2].nag[0],"$3")
+    assert.is(moves[3].nag[0],"$4")
+    assert.is(moves[4].nag[0],"$6")
+    assert.is(moves[5].nag[0],"$5")
+})
+
+reader ("should have the fen stored with each move", function () {
+    const reader = new PgnReader({pgn: "1. d4 e5"})
+    assert.is(reader.getMoves().length,2)
+    assert.ok(reader.getMoves()[0].fen)
+    assert.ok(reader.getMoves()[1].fen)
+})
+
+reader.run();
+
+// Next Suite
+
+const config = suite('When using all kind of configuration in the reader');
+
+config("should ensure that short notation is written", function () {
+    const reader = new PgnReader({ pgn: 'e4 e5 Nf3 Nc6', notation: 'short'})
+    assert.is(reader.getMoves().length,4)
+    assert.is(reader.writePgn(),'1. e4 e5 2. Nf3 Nc6')
+})
+config("should ensure that long notation is written", function (){
+    const reader = new PgnReader({ pgn: 'e4 e5 Nf3 Nc6', notation: 'long'})
+    assert.is(reader.getMoves().length,4)
+    let res = reader.writePgn({notation: 'long'})
+    assert.is(res,'1. e2-e4 e7-e5 2. Ng1-f3 Nb8-c6')
+})
+config("should ensure that different positions are understood", function () {
+    let reader = new PgnReader({pgn: 'e4', position: 'start'})
+    assert.ok(reader)
+    assert.is(reader.getMoves().length,1)
+    expect(reader.getPosition(null).startsWith('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR')).to.be.true
+    reader = new PgnReader({ pgn: 'e5', position: 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1'})
+    assert.is(reader.getMoves().length,1)
+    expect(reader.getPosition(0).startsWith('rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR')).to.be.true
+
+})
+config("should ensure that configuring manyGames works", function () {
+    const reader = new PgnReader({manyGames: true, pgn: "e4 e5 *\n\nd4 d5 *"})
+    assert.ok(reader)
+    assert.is(reader.getMoves().length,2)
+    assert.is(reader.getGames().length,2)
+})
+// The following should be part of another suite ...
+config('should emmit an error when reading many games with `manyGames == true`', () => {
     assert.throws(() => {
         new PgnReader({pgn: 'e4 e5 *\n\nd4 d5 *'});
     }, 'Expected end of input or whitespace but &quot;d&quot; found.');
 });
 
-reader('should ensure that lazyLoad works', () => {
+config('should ensure that lazyLoad works', () => {
     const reader = new PgnReader({lazyLoad: true, manyGames: true, pgn: "e4 e5 *\n\nd4 d5"});
 
     assert.ok(reader);
@@ -85,27 +196,27 @@ reader('should ensure that lazyLoad works', () => {
     assert.is(reader.getMove(0).notation.notation, 'e4');
 });
 
-reader('should ensure that pgnFile works (workaround)', () => {
+config('should ensure that pgnFile works (workaround)', () => {
     const content = readFile('test/2games.pgn');
     const reader = new PgnReader({pgn: content, manyGames: true});
 
     assert.is(reader.getGames().length, 2);
 });
 
-reader('should ensure that error is thrown if file is not found / could not be read (workaround)', () => {
+config('should ensure that error is thrown if file is not found / could not be read (workaround)', () => {
     assert.throws(() => {
         readFile('2games-missing.pgn')
     }, 'File not found or could not read: 2games-missing.pgn');
 });
 
-reader('should ensure that startPlay works', () => {
+config('should ensure that startPlay works', () => {
     const reader = new PgnReader({pgn: 'e4 e5 Nf3 Nc6', startPlay: 3, hideMovesBefore: false});
 
     assert.is(reader.getMoves().length, 4);
     assert.is(reader.getMove(0).notation.notation, 'e4');
 });
 
-reader.run();
+config.run();
 
 const formats = suite('When reading various formats');
 
