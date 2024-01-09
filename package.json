@@ -31,7 +31,7 @@
     "@mliebelt/pgn-parser": "^1.4.14",
     "@mliebelt/pgn-types": "^1.0.4",
     "@mliebelt/pgn-writer": "^1.0.5",
-    "chess.js": "^0.12.1",
+    "chess.js": "^0.13.4",
     "sync-fetch": "^0.5.2"
   },
   "devDependencies": {
