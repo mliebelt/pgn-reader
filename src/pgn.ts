@@ -1,6 +1,6 @@
 import { parse } from '@mliebelt/pgn-parser'
 import { Color, Field, GameComment, Message, PgnReaderMove, PgnGame, PgnMove, PgnDate, PgnTime, TimeControl, Tags } from '@mliebelt/pgn-types'
-import { writeGame, PgnWriterConfiguration } from '@mliebelt/pgn-writer'
+import { writeGame } from '@mliebelt/pgn-writer'
 // import { PROMOTIONS} from "@mliebelt/pgn-types";
 import { ParseTree} from '@mliebelt/pgn-parser'
 import {Chess} from 'chess.js'
@@ -414,7 +414,8 @@ export class PgnReader {
     afterMoveWithVariation (move: PgnReaderMove): boolean {
         return this.getMoves()[move.prev] && (this.getMoves()[move.prev].variations.length > 0)
     }
-    writePgn(configuration:PgnWriterConfiguration = {}): string {
+
+    writePgn(configuration: {} = {}): string {
         if (this.getGames()?.length === 0) return ""
         return writeGame(this.getGame(this.currentGameIndex) || 0, configuration)
     }
