@@ -1,22 +1,14 @@
 import {GameState} from "./state"
 import {FEN, PgnReaderConfiguration, SAN} from "./types"
-import { NAGs } from "./nag";
 import {PgnGame, PgnReaderMove} from "@mliebelt/pgn-types";
+import {PgnReader} from "./pgn";
 
 export interface ViewApi {
     gameState: GameState,
-    makeMove(move?: PgnReaderMove|SAN): boolean // Returns true if the move was legal.
-    setPosition(position: FEN): boolean // Returns true if the position could be found in the existing moves
-    getPosition(): FEN // Returns the current position
+    makeMove(move?: PgnReaderMove|SAN): GameState // Returns the new GameState if the move was legal.
+    setPosition(position: FEN): GameState // Returns the new GameState if the position could be found in the existing moves
+    getCurrentPosition(): FEN // Returns the current position
     getMoves(): PgnReaderMove[]  //
-}
-
-export interface EditApi extends ViewApi {
-    addMove(gameState: GameState, move: PgnReaderMove): boolean // Returns true if the move was legal.
-    deleteMove(gameState: GameState, move: PgnReaderMove): boolean // Returns true if the move could be deleted.
-    addComment(gameState: GameState, comment: string, before: boolean): void // Add a comment to the current move, if before, add it before the move.
-    setNAGs(gameState: GameState, nag: NAGs): void // Set the NAG of the current move.
-    // ... and many more...
 }
 
 /**
@@ -24,21 +16,77 @@ export interface EditApi extends ViewApi {
  * @param pgn the PGN string to read.
  */
 export function read(pgn: string): PgnGame {
+    const reader = new PgnReader({ pgn: pgn })
     return {
-        moves: []
+        moves: reader.getMoves(),
+        gameComment: reader.getGameComment(),
+        tags: reader.getTags()
     }
 }
 
-export function view(game: PgnGame, configuration: PgnReaderConfiguration): ViewApi {
-    let gameState: GameState = { game: game}
+/*
+    Implement it in a way that is backward compatible with the PgnReader. Later on, we have to refactor it,
+    and then create (possibly) a new major version of it. Current problems:
+    * PgnGame knows only implicit about the starting position (but can be computed, if SetUp and FEN is given).
+    * PgnReader is not really playing a game. It gets all information needed for the next move. The current structure
+        helps here, because moves are linked to each other
+    * We need a new constructor for PgnReader, that allows to create it from a PgnGame (that is already read)
+ */
+export function view(game: PgnGame, configuration: PgnReaderConfiguration): {
+    makeMove: (move?: (PgnReaderMove | SAN)) => GameState;
+    getCurrentPosition: () => FEN;
+    gameState: GameState;
+    getMoves: () => PgnReaderMove[];
+    setPosition: (position: FEN) => GameState
+} {
+    const reader = new PgnReader(configuration)
+    reader.loadGame(game)
+    let gameState: GameState = {
+        game: game
+        }
     return {
         gameState: gameState,
-        makeMove: (move?: PgnReaderMove | SAN): boolean => { return false },
-        setPosition: (position: FEN): boolean => { return false},
-        getPosition: (): FEN => { return ""},
-        getMoves: (): PgnReaderMove[] => { return [] }
+        makeMove: (move?: PgnReaderMove | SAN): GameState => {
+            if (! move) {
+                let _move = reader.getFirstMove()
+                reader.makeMove(_move)
+                gameState.currentMove = _move
+            } else {
+                if ((move as PgnReaderMove).notation !== undefined) {
+                    reader.makeMove(move)
+                    gameState.currentMove = move as PgnReaderMove
+                } else {
+                    let _move = reader.findMove(move as string)
+                    reader.makeMove(_move)
+                    gameState.currentMove = _move
+                }
+            }
+            return gameState
+        },
+        setPosition: (position: FEN): GameState => {
+            return this.makeMove(position)
+        },
+        getCurrentPosition: (): FEN => {
+            return gameState.currentMove.fen
+        },
+        getMoves: (): PgnReaderMove[] => {
+            return gameState.game.moves
+        }
     }
 }
+
+
+/*
+export interface EditApi extends ViewApi {
+    addMove(gameState: GameState, move: PgnReaderMove): boolean // Returns true if the move was legal.
+    deleteMove(gameState: GameState, move: PgnReaderMove): boolean // Returns true if the move could be deleted.
+    addComment(gameState: GameState, comment: string, before: boolean): void // Add a comment to the current move, if before, add it before the move.
+    setNAGs(gameState: GameState, nag: NAGs): void // Set the NAG of the current move.
+    // ... and many more...
+}
+*/
+
+/*
 
 export function edit(game: PgnGame, configuration: PgnReaderConfiguration): EditApi {
     let gameState: GameState = { game: game}
@@ -53,4 +101,4 @@ export function edit(game: PgnGame, configuration: PgnReaderConfiguration): Edit
         addComment: (gameState: GameState, comment: string, before: boolean = false): void => { return},
         setNAGs: (gameState: GameState, nag: NAGs): void => { return }
     }
-}
+}*/

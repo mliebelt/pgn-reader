@@ -1,11 +1,13 @@
-import { parse } from '@mliebelt/pgn-parser'
+import {parse, ParseTree} from '@mliebelt/pgn-parser'
 import { Color, Field, GameComment, Message, PgnReaderMove, PgnGame, PgnMove, PgnDate, PgnTime, TimeControl, Tags } from '@mliebelt/pgn-types'
 import { writeGame } from '@mliebelt/pgn-writer'
-// import { PROMOTIONS} from "@mliebelt/pgn-types";
-import { ParseTree} from '@mliebelt/pgn-parser'
+// import { PROMOTIONS, SAN, FEN} from "@mliebelt/pgn-types";
+import {SAN, FEN} from './types'
 import {Chess} from 'chess.js'
 import * as nag from './nag'
 import { PgnReaderConfiguration, PrimitiveMove, Shape } from "./types"
+import {ViewApi} from "./api"
+import {GameState} from "./state";
 
 export { hasDiagramNag, nagToSymbol, NAGs } from './nag'
 export { Field, PgnReaderMove, GameComment} from '@mliebelt/pgn-types'
@@ -25,6 +27,7 @@ let isBrowser=new Function("try {return this===window;}catch(e){ return false;}"
 export class PgnReader {
     configuration: PgnReaderConfiguration
     games: ParseTree[]
+    checkedGames?: PgnGame[]
     moves: PgnReaderMove[]
     chess
     currentGameIndex: number
@@ -130,9 +133,9 @@ export class PgnReader {
         this.games = parse(this.configuration.pgn, {startRule: 'games'}) as unknown as ParseTree[];
     }
     loadOne (game:ParseTree|number) {
-        let interpretHeaders = (_game): void => {
-            if (_game.tags.SetUp) {
-                const setup = _game.tags.SetUp
+        let interpretHeaders = (_game:ParseTree): void => {
+            if (_game.tags?.SetUp) {
+                const setup = _game.tags?.SetUp
                 if (setup === '0') {
                     this.configuration.position = 'start'
                 } else {
@@ -721,7 +724,7 @@ export class PgnReader {
     getEndGame(): string {
         return this.endGame;
     }
-    getPosition(index:number|null) {
+    getPosition(index:number|null): FEN {
         if (index === null) {
             this.chess.reset()
             return this.chess.fen()
@@ -729,6 +732,7 @@ export class PgnReader {
             return this.getMove(index).fen
         }
     }
+
     setShapes(move:PgnReaderMove, shapes: Shape[]) {
         if (! move.commentDiag) {
             move.commentDiag = {};
@@ -748,5 +752,21 @@ export class PgnReader {
                 move.commentDiag.colorFields.push(colField + fie)
             }
         })
+    }
+
+    gameState: GameState;
+
+    makeMove(move?: PgnReaderMove | SAN): boolean {
+        return false;
+    }
+
+    setPosition(position: FEN): boolean {
+        return false;
+    }
+
+    loadGame(game:PgnGame): void {
+        this.checkedGames = [game]
+        this.moves = game.moves
+        this.currentGameIndex = 0
     }
 }

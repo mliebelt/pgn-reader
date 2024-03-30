@@ -1,4 +1,4 @@
-import {PgnGame} from "@mliebelt/pgn-types";
+import {PgnGame, PgnReaderMove} from "@mliebelt/pgn-types";
 
 /**
  * Interface representing the state of a game.
@@ -8,5 +8,5 @@ import {PgnGame} from "@mliebelt/pgn-types";
  */
 export interface GameState {
     game: PgnGame,
-    // gameState() => GameState
+    currentMove?: PgnReaderMove | undefined
 }
