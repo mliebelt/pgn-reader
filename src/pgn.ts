@@ -709,10 +709,10 @@ export class PgnReader {
         }
         return null
     }
-    getTags(): Map<string, string | Message[] | PgnDate | PgnTime | TimeControl> {
-        if (! this.games) { return new Map() }
+    getTags(): Tags {
+        if (! this.games) { return new Map() as undefined as Tags }
         let _tags = this.games[this.currentGameIndex].tags
-        return new Map(Object.entries(_tags))
+        return new Map(Object.entries(_tags)) as unknown as Tags
     }
     getGameComment(): GameComment {
         if (! this.games) { return undefined }
