@@ -9,7 +9,7 @@
     "ignoreDeprecations": "5.0",
     "module": "CommonJS",
     "moduleResolution": "Node",
-//    "noImplicitReturns": true,
+    //    "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "outDir": "lib",
     "skipLibCheck": true,
@@ -18,5 +18,12 @@
     "target": "ES6"
   },
   "files": [
-    "./src/fetch.ts", "./src/index.ts", "./src/nag.ts", "./src/pgn.ts", "./src/pgn.ts", "./src/types.ts"]
+    "./src/api.ts",
+    "./src/fetch.ts",
+    "./src/index.ts",
+    "./src/nag.ts",
+    "./src/pgn.ts",
+    "./src/state.ts",
+    "./src/types.ts"
+  ]
 }

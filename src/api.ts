@@ -24,6 +24,52 @@ export function read(pgn: string): PgnGame {
     }
 }
 
+/**
+ * Read a PGN string and return the games read as array.
+ * @param pgn the PGN string to read.
+ */
+export function readMany(pgn: string): PgnGame[] {
+    const reader = new PgnReader({ pgn: pgn, manyGames: true })
+    const numGames = reader.games.length
+    const games: PgnGame[] = []
+    for (let i = 0; i < numGames; i++) {
+        reader.loadOne(i)
+        games.push({
+            moves: reader.getMoves(),
+            gameComment: reader.getGameComment(),
+            tags: reader.getTags()
+        })
+    }
+    return games
+}
+
+/**
+ * Reads a PGN file and returns an array of PgnGame objects.
+ * Each PgnGame object represents a single game in the PGN file.
+ *
+ * @param {string} file - The path of the PGN file to be read.
+ * @return {PgnGame[]} - An array of PgnGame objects representing the games in the PGN file.
+ */
+export function readFile(file: string): PgnGame[] {
+    const reader = new PgnReader({ pgnFile: file, manyGames: true})
+    const numGames = reader.getGames().length
+
+    if (numGames === 0) {
+        return []
+    } else {
+        const games: PgnGame[] = []
+        for (let i = 0; i < numGames; i++) {
+            reader.loadOne(i)
+            games.push({
+                moves: reader.getMoves(),
+                gameComment: reader.getGameComment(),
+                tags: reader.getTags()
+            })
+        }
+        return games
+    }
+}
+
 /*
     Implement it in a way that is backward compatible with the PgnReader. Later on, we have to refactor it,
     and then create (possibly) a new major version of it. Current problems:
@@ -32,13 +78,7 @@ export function read(pgn: string): PgnGame {
         helps here, because moves are linked to each other
     * We need a new constructor for PgnReader, that allows to create it from a PgnGame (that is already read)
  */
-export function view(game: PgnGame, configuration: PgnReaderConfiguration): {
-    makeMove: (move?: (PgnReaderMove | SAN)) => GameState;
-    getCurrentPosition: () => FEN;
-    gameState: GameState;
-    getMoves: () => PgnReaderMove[];
-    setPosition: (position: FEN) => GameState
-} {
+export function view(game: PgnGame, configuration: PgnReaderConfiguration): ViewApi {
     const reader = new PgnReader(configuration)
     reader.loadGame(game)
     let gameState: GameState = {
