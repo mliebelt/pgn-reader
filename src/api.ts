@@ -2,6 +2,7 @@ import {GameState} from "./state"
 import {FEN, PgnReaderConfiguration, SAN} from "./types"
 import {PgnGame, PgnReaderMove} from "@mliebelt/pgn-types";
 import {PgnReader} from "./pgn";
+import * as fs from 'fs';
 
 export interface ViewApi {
     gameState: GameState,
@@ -43,6 +44,7 @@ export function readMany(pgn: string): PgnGame[] {
     return games
 }
 
+
 /**
  * Reads a PGN file and returns an array of PgnGame objects.
  * Each PgnGame object represents a single game in the PGN file.
@@ -50,24 +52,17 @@ export function readMany(pgn: string): PgnGame[] {
  * @param {string} file - The path of the PGN file to be read.
  * @return {PgnGame[]} - An array of PgnGame objects representing the games in the PGN file.
  */
-export function readFile(file: string): PgnGame[] {
-    const reader = new PgnReader({ pgnFile: file, manyGames: true})
-    const numGames = reader.getGames().length
-
-    if (numGames === 0) {
-        return []
-    } else {
-        const games: PgnGame[] = []
-        for (let i = 0; i < numGames; i++) {
-            reader.loadOne(i)
-            games.push({
-                moves: reader.getMoves(),
-                gameComment: reader.getGameComment(),
-                tags: reader.getTags()
-            })
-        }
-        return games
-    }
+export function readFile(file: string): Promise<PgnGame[]> {
+    return new Promise((resolve, reject) => {
+        fs.readFile(file, 'utf8', (err, data) => {
+            if (err) {
+                console.error(`Error while reading file: ${err}`);
+                reject(err);
+                return;
+            }
+            resolve(readMany(data));
+        });
+    });
 }
 
 /*
