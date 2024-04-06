@@ -1,6 +1,6 @@
 import { suite } from 'uvu'
 import * as assert from 'uvu/assert'
-import { view, read, readMany, readFile } from "../src"
+import { view, read, readMany } from "../src"
 
 const viewApiSuite = suite('Base functionality of the ViewApi');
 
@@ -15,7 +15,7 @@ viewApiSuite('should be able to view a pgn', () => {
     const pgn = 'e4 e5 Nf3 Nc6'
     const pgnGame = read(pgn)
     const viewGame = view(pgnGame, {})
-    let newState = viewGame.makeMove('e4')
+    viewGame.makeMove('e4')
     let move = viewGame.gameState.currentMove
 
     assert.is.not(viewGame, undefined)
@@ -32,11 +32,17 @@ viewApiSuite('should be able to read many games from one pgn string', () => {
     const pgnGames = readMany(pgn)
     assert.is(pgnGames.length, 3)
 })
-
+/* Disabled, removed reading files from API.
 viewApiSuite('should be able to read many games from a file', async () => {
     const file = './test/2games.pgn'
     const pgnGames = await readFile(file)
     assert.is(pgnGames.length, 2)
 })
+
+viewApiSuite('should be able to read a file synchronous', () => {
+    const file = './test/2games.pgn'
+    const pgnGames = readFileSync(file)
+    assert.is(pgnGames.length, 2)
+})*/
 
 viewApiSuite.run()

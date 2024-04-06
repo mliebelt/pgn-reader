@@ -17,13 +17,7 @@
     "sourceMap": true,
     "target": "ES6"
   },
-  "files": [
-    "./src/api.ts",
-    "./src/fetch.ts",
-    "./src/index.ts",
-    "./src/nag.ts",
-    "./src/pgn.ts",
-    "./src/state.ts",
-    "./src/types.ts"
+  "include": [
+    "./src/**/*.ts", "./test/**/*.ts"
   ]
 }

@@ -2,7 +2,7 @@ import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 
 import {PgnReader, Shape} from '../src';
-import {readFile} from "../lib/fetch";
+import {readFile} from "../src/fetch";
 import {PgnReaderMove} from "@mliebelt/pgn-types";
 
 const reader = suite('Base functionality of the reader without any configuration');
@@ -118,8 +118,8 @@ reader ("should be able to read additional tags and keep them", function () {
     const reader = new PgnReader({ pgn: '[White "Me"] [Black "Magnus"] e4 e5'})
     assert.is(reader.getMoves().length,2)
     const tags = reader.getTags()
-    assert.is(tags.get('White'),"Me")
-    assert.is(tags.get('Black'),"Magnus")
+    assert.is(tags.White,"Me")
+    assert.is(tags.Black,"Magnus")
 })
 
 reader("should read nags", function() {
@@ -429,23 +429,23 @@ tags.before(context => {
 tags('should have these tags read', context => {
     // test setup
 
-    assert.equal(context.reader.getTags().size, 9);
-    assert.equal(context.reader.getTags().get('Site'), 'Berlin GER');
-    assert.equal(context.reader.getTags().get('Date').value, '1852.12.31');
-    assert.equal(context.reader.getTags().get('SetUp'), '0');
+    assert.equal(Object.keys(context.reader.getTags()).length, 9);
+    assert.equal(context.reader.getTags().Site, 'Berlin GER');
+    assert.equal(context.reader.getTags().Date.value, '1852.12.31');
+    assert.equal(context.reader.getTags().SetUp, '0');
     assert.equal(context.reader.configuration.position, 'start');
 });
 
 tags('should have tag mapped to FEN', context => {
     // test setup
 
-    assert.equal(context.reader2.getTags().get('SetUp'), '1');
+    assert.equal(context.reader2.getTags().SetUp, '1');
     assert.equal(context.reader2.configuration.position, '8/p6p/P5p1/8/4p1K1/6q1/5k2/8 w - - 12 57');
 });
 
 tags('should accept variations of case in tags', () => {
     let pgn = new PgnReader({pgn: '[Setup "1"] [fen "8/p6p/P5p1/8/4p1K1/6q1/5k2/8 w - - 12 57"] *'})
-    assert.equal(pgn.getTags().get('SetUp'), '1');
+    assert.equal(pgn.getTags().SetUp, '1');
     assert.equal(pgn.configuration.position, '8/p6p/P5p1/8/4p1K1/6q1/5k2/8 w - - 12 57');
 });
 
@@ -453,16 +453,16 @@ tags('should understand unknown tags and record them', () => {
     let pgn = new PgnReader({pgn: '[PuzzleCategory "Material"] [PuzzleEngine "Stockfish 13"] ' +
             '[PuzzleMakerVersion "0.5"] [PuzzleWinner "White"] *'})
     let tags = pgn.getTags()
-    assert.equal(tags.get('PuzzleCategory'), 'Material');
-    assert.equal(tags.get('PuzzleEngine'), 'Stockfish 13');
-    assert.equal(tags.get('PuzzleMakerVersion'), '0.5');
-    assert.equal(tags.get('PuzzleWinner'), 'White');
+    assert.equal(tags.PuzzleCategory, 'Material');
+    assert.equal(tags.PuzzleEngine, 'Stockfish 13');
+    assert.equal(tags.PuzzleMakerVersion, '0.5');
+    assert.equal(tags.PuzzleWinner, 'White');
 });
 
 tags('should read unusual spacing of tags', () => {
     let pgn = new PgnReader({pgn: '[  White    "Me"   ]  [  Black  "Magnus"   ] 1. e4'})
     let tags = pgn.getTags()
-    assert.equal(tags.get('White'), 'Me');
+    assert.equal(tags.White, 'Me');
 });
 
 tags.run();

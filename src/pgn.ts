@@ -520,13 +520,13 @@ export class PgnReader {
         };
         eachMoveVariation(movesMainLine, 0, null)
     }
-    addMove (move: PrimitiveMove, moveNumber: number): number {
+    addMove (move: PrimitiveMove|string, moveNumber: number): number {
         let getTurn = (moveNumber): Color => {
             return this.getMove(moveNumber).turn === "w" ? 'b' : "w"
         }
 
         // Special case: first move, so there is no previous move
-        let existingFirstMove = (move) => {
+        let existingFirstMove = (move: PrimitiveMove|string) => {
             let first_move_notation = (): string => {
                 if (typeof this.getMove(0) == 'undefined') return null
                 return this.getMove(0).notation.notation
@@ -556,7 +556,7 @@ export class PgnReader {
 
         // Returns the existing move number or null
         // Should include all variations as well
-        let existingMove = (move, moveNumber): number|null => {
+        let existingMove = (move: PrimitiveMove|string, moveNumber: number): number|null => {
             if (moveNumber == null) return existingFirstMove(move);
             let prevMove = this.getMove(moveNumber);
             if (typeof prevMove == "undefined") return null;
@@ -710,9 +710,9 @@ export class PgnReader {
         return null
     }
     getTags(): Tags {
-        if (! this.games) { return new Map() as undefined as Tags }
-        let _tags = this.games[this.currentGameIndex].tags
-        return new Map(Object.entries(_tags)) as unknown as Tags
+        if (! this.games) { return {} as Tags }
+        return this.games[this.currentGameIndex].tags
+        // return new Map(Object.entries(_tags)) as unknown as Tags
     }
     getGameComment(): GameComment {
         if (! this.games) { return undefined }

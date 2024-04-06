@@ -44,27 +44,6 @@ export function readMany(pgn: string): PgnGame[] {
     return games
 }
 
-
-/**
- * Reads a PGN file and returns an array of PgnGame objects.
- * Each PgnGame object represents a single game in the PGN file.
- *
- * @param {string} file - The path of the PGN file to be read.
- * @return {PgnGame[]} - An array of PgnGame objects representing the games in the PGN file.
- */
-export function readFile(file: string): Promise<PgnGame[]> {
-    return new Promise((resolve, reject) => {
-        fs.readFile(file, 'utf8', (err, data) => {
-            if (err) {
-                console.error(`Error while reading file: ${err}`);
-                reject(err);
-                return;
-            }
-            resolve(readMany(data));
-        });
-    });
-}
-
 /*
     Implement it in a way that is backward compatible with the PgnReader. Later on, we have to refactor it,
     and then create (possibly) a new major version of it. Current problems:
