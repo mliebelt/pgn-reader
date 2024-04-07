@@ -1,8 +1,7 @@
 import {GameState} from "./state"
 import {FEN, PgnReaderConfiguration, SAN} from "./types"
-import {PgnGame, PgnReaderMove} from "@mliebelt/pgn-types";
-import {PgnReader} from "./pgn";
-import * as fs from 'fs';
+import {PgnGame, PgnReaderMove} from "@mliebelt/pgn-types"
+import {PgnReader} from "./pgn"
 
 export interface ViewApi {
     gameState: GameState,
