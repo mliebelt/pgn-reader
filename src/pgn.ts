@@ -141,6 +141,10 @@ export class PgnReader {
                 } else {
                     this.configuration.position = _game.tags.FEN
                 }
+            } else {
+                if (this.configuration.manyGames == true) {
+                    this.configuration.position = 'start'
+                }
             }
             if (_game.tags.Result) {
                 this.endGame = _game.tags.Result

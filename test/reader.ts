@@ -900,6 +900,54 @@ manyGames('should ensure lazyLoad and loadOne works', () => {
     reader.loadOne(2)
     assert.equal(reader.san(reader.getMove(0)), 'c4');
 });
+manyGames('should ensure switching games with games defined by FEN works', () => {
+    const pgn = `[Event "DoorZetten_17_0624"]
+[Site "?"]
+[Date "2024.04.08"]
+[Round "?"]
+[White "ninja-trucs"]
+[Black "01"]
+[Result "*"]
+[ECO "D35"]
+[Annotator "van der Logt,Huub"]
+[PlyCount "19"]
+
+1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Nbd7 5. cxd5 exd5 6. Nxd5 $2 Nxd5 $1 7.
+Bxd8 Bb4+ 8. Qd2 Kxd8 9. e3 Bxd2+ 10. Kxd2 *
+
+[Event "DoorZetten_17_0624"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "matpuzzels"]
+[Black "01"]
+[Result "1-0"]
+[Annotator "van der Logt,Huub"]
+[SetUp "1"]
+[FEN "8/1p6/p3pR2/4R3/4b3/2B1kp1P/PP2r1P1/6K1 w - - 0 1"]
+[PlyCount "1"]
+
+{[%evp 0,1,29999,-30000]} 1. Rxf3# 1-0
+
+[Event "DoorZetten_17_0624"]
+[Site "?"]
+[Date "2024.04.08"]
+[Round "?"]
+[White "ninja-trucs"]
+[Black "02"]
+[Result "*"]
+[ECO "B01"]
+[Annotator "van der Logt,Huub"]
+[PlyCount "21"]
+
+{[%evp 0,12,19,38,42,38,72,65,58,64,93,94,81,90,165]} 1. e4 d5 2. exd5 Qxd5 3.
+Nc3 Qa5 4. Nf3 Bg4 5. h3*`;
+    const reader = new PgnReader({pgn: pgn, manyGames: true})
+    assert.equal(reader.getGames().length, 3);
+    reader.loadOne(1)   // Will lead to an error initially.
+    reader.loadOne(2)
+    reader.loadOne(0)
+})
 
 manyGames.run();
 
