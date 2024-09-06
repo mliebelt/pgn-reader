@@ -1320,6 +1320,16 @@ workingWithNags('should ignore clear when no NAGs', () => {
     assert.equal(reader.getMove(1).nag.length, 0);
 });
 
+workingWithNags('should understand $10, $11, $12 as "="', () => {
+    const reader = new PgnReader({pgn: "1. d4$10 e5$11 2. dxe5$12"})
+    assert.equal(reader.sanWithNags(reader.getMove(0)), 'd4=');
+    assert.equal(reader.getMove(0).nag[0], '$10');
+    assert.equal(reader.sanWithNags(reader.getMove(1)), 'e5=');
+    assert.equal(reader.getMove(1).nag[0], '$11');
+    assert.equal(reader.sanWithNags(reader.getMove(2)), 'dxe5=');
+    assert.equal(reader.getMove(2).nag[0], '$12');
+})
+
 workingWithNags.run();
 
 const addArrowsAndCircles = suite('When having a game and wanting to add arrows and circles');
