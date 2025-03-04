@@ -13,7 +13,7 @@
     "noFallthroughCasesInSwitch": true,
     "outDir": "lib",
     "skipLibCheck": true,
-    "suppressImplicitAnyIndexErrors": true,
+    // "suppressImplicitAnyIndexErrors": true,  // Not possible any more with TypeScript 5.8
     "sourceMap": true,
     "target": "ES6"
   },
