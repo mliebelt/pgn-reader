@@ -1,17 +1,5 @@
 import { parse, ParseTree } from "@mliebelt/pgn-parser";
-import {
-  Color,
-  Field,
-  GameComment,
-  Message,
-  PgnReaderMove,
-  PgnGame,
-  PgnMove,
-  PgnDate,
-  PgnTime,
-  TimeControl,
-  Tags,
-} from "@mliebelt/pgn-types";
+import { Color, Field, GameComment, Message, PgnReaderMove, PgnGame, PgnMove, PgnDate, PgnTime, TimeControl, Tags } from "@mliebelt/pgn-types";
 import { writeGame } from "@mliebelt/pgn-writer";
 // import { PROMOTIONS, SAN, FEN} from "@mliebelt/pgn-types";
 import { SAN, FEN } from "./types";
@@ -20,14 +8,13 @@ import * as nag from "./nag";
 import { PgnReaderConfiguration, PrimitiveMove, Shape } from "./types";
 import { ViewApi } from "./api";
 import { GameState } from "./state";
+import { win32 } from "path/win32";
 
 export { hasDiagramNag, nagToSymbol, NAGs } from "./nag";
 export { Field, PgnReaderMove, GameComment } from "@mliebelt/pgn-types";
 export { PROMOTIONS } from "@mliebelt/pgn-types";
 
-let isBrowser = new Function(
-  "try {return this===window;}catch(e){ return false;}",
-);
+let isBrowser = new Function("try {return this===window;}catch(e){ return false;}");
 
 /**
  * Defines the base functionality for reading and working with PGN.
@@ -68,9 +55,7 @@ export class PgnReader {
           configuration.pgn = "*";
         } else {
           // the following only works in the browser
-          configuration.pgn = isBrowser()
-            ? browserReadFromURL(configuration.pgnFile)
-            : "*";
+          configuration.pgn = isBrowser() ? browserReadFromURL(configuration.pgnFile) : "*";
         }
       }
       return Object.assign(defaults, configuration);
@@ -94,9 +79,7 @@ export class PgnReader {
       }
       return fig;
     }
-    let prevMovePosition: string = move.prev
-      ? this.getMove(move.prev).fen
-      : this.setToStart();
+    let prevMovePosition: string = move.prev ? this.getMove(move.prev).fen : this.setToStart();
     this.chess.load(prevMovePosition);
     let prettySan = this.chess.move({ from: move.from, to: move.to });
     if (prettySan && this.configuration.notation != "long") {
@@ -118,20 +101,11 @@ export class PgnReader {
       disc = move.from.substring(0, 1);
     }
     const check = notation.check ? notation.check : "";
-    const prom = notation.promotion
-      ? "=" + getFig(notation.promotion.substring(1, 2))
-      : "";
+    const prom = notation.promotion ? "=" + getFig(notation.promotion.substring(1, 2)) : "";
     if (this.configuration.notation === "short") {
       return fig + disc + strike + notation.col + notation.row + prom + check;
     }
-    return (
-      fig +
-      move.from +
-      (notation.strike ? strike : "-") +
-      move.to +
-      prom +
-      check
-    );
+    return fig + move.from + (notation.strike ? strike : "-") + move.to + prom + check;
   }
 
   sanWithNags(move: PgnReaderMove): string {
@@ -144,10 +118,7 @@ export class PgnReader {
 
   loadPgn(): PgnReader {
     let hasManyGames = (): boolean => {
-      return (
-        this.configuration.manyGames ||
-        this.configuration.manyGames !== undefined
-      );
+      return this.configuration.manyGames || this.configuration.manyGames !== undefined;
     };
     if (hasManyGames()) {
       this.loadMany();
@@ -180,10 +151,7 @@ export class PgnReader {
         if (this.configuration.manyGames == true) {
           this.configuration.position = "start";
         } else {
-          if (
-            this.configuration.position &&
-            !this.configuration.position.startsWith("start")
-          ) {
+          if (this.configuration.position && !this.configuration.position.startsWith("start")) {
             _game.tags.SetUp = "1";
             _game.tags.FEN = this.configuration.position;
           }
@@ -197,8 +165,7 @@ export class PgnReader {
     };
 
     this.currentGameIndex = typeof game === "number" ? game : 0;
-    let _game: ParseTree =
-      typeof game === "number" ? this.games[game] : (game as ParseTree);
+    let _game: ParseTree = typeof game === "number" ? this.games[game] : (game as ParseTree);
     interpretHeaders(_game);
     this.readMoves(_game.moves);
     if (this.configuration.startPlay && this.configuration.hideMovesBefore) {
@@ -224,10 +191,7 @@ export class PgnReader {
     };
   }
   possibleMoves(move: number | string): Map<Field, Field[]> {
-    let _fen =
-      typeof move === "number"
-        ? this.getMove(move as undefined as number).fen
-        : move;
+    let _fen = typeof move === "number" ? this.getMove(move as undefined as number).fen : move;
     const dests = new Map();
     if (!this.chess.load(_fen)) {
       // Not a valid position, no move possible
@@ -262,11 +226,7 @@ export class PgnReader {
         return tokens[1];
       }
 
-      if (
-        getTurn(this.configuration.position) === "b" &&
-        this.isMove(0) &&
-        this.moves[0].turn === "w"
-      ) {
+      if (getTurn(this.configuration.position) === "b" && this.isMove(0) && this.moves[0].turn === "w") {
         this.getMoves().forEach(function (move) {
           move.turn = move.turn === "w" ? "b" : "w";
         });
@@ -422,10 +382,7 @@ export class PgnReader {
 
     const move: PgnReaderMove = this.getMove(id);
     // 1. Check this is variation
-    if (
-      typeof move.variationLevel == "undefined" ||
-      move.variationLevel === 0
-    ) {
+    if (typeof move.variationLevel == "undefined" || move.variationLevel === 0) {
       return;
     }
 
@@ -433,10 +390,7 @@ export class PgnReader {
     const myFirst: PgnReaderMove = firstMoveOfVariation(move);
 
     // 3. Get the index of this moves variation array
-    const higherVariationMove =
-      myFirst.prev == null
-        ? this.getFirstMove()
-        : this.getMove(this.getMove(myFirst.prev).next);
+    const higherVariationMove = myFirst.prev == null ? this.getFirstMove() : this.getMove(this.getMove(myFirst.prev).next);
     let indexVariation: number;
     for (let i = 0; i < higherVariationMove.variations.length; i++) {
       if (higherVariationMove.variations[i] === myFirst) {
@@ -448,8 +402,7 @@ export class PgnReader {
     if (indexVariation > 0) {
       // Just switch with the previous index
       let tmpMove = higherVariationMove.variations[indexVariation - 1];
-      higherVariationMove.variations[indexVariation - 1] =
-        higherVariationMove.variations[indexVariation];
+      higherVariationMove.variations[indexVariation - 1] = higherVariationMove.variations[indexVariation];
       higherVariationMove.variations[indexVariation] = tmpMove;
     } else if (higherVariationMove.prev == null) {
       // 5. Special case: variation has no previous move, switch main line
@@ -474,32 +427,18 @@ export class PgnReader {
   }
   /* Ensure that if variationLevel is not set, it is interpreted as 0. */
   startMainLine(move: PgnReaderMove): boolean {
-    return (
-      (typeof move.variationLevel == "undefined" ||
-        move.variationLevel === 0) &&
-      typeof move.prev !== "number"
-    );
+    return (typeof move.variationLevel == "undefined" || move.variationLevel === 0) && typeof move.prev !== "number";
   }
   startVariation(move: PgnReaderMove): boolean {
     return (
-      typeof move.variationLevel != "undefined" &&
-      move.variationLevel > 0 &&
-      (typeof move.prev != "number" ||
-        this.getMoves()[move.prev].next !== move.index)
+      typeof move.variationLevel != "undefined" && move.variationLevel > 0 && (typeof move.prev != "number" || this.getMoves()[move.prev].next !== move.index)
     );
   }
   endVariation(move: PgnReaderMove): boolean {
-    return (
-      typeof move.variationLevel != "undefined" &&
-      move.variationLevel > 0 &&
-      !move.next
-    );
+    return typeof move.variationLevel != "undefined" && move.variationLevel > 0 && !move.next;
   }
   afterMoveWithVariation(move: PgnReaderMove): boolean {
-    return (
-      this.getMoves()[move.prev] &&
-      this.getMoves()[move.prev].variations.length > 0
-    );
+    return this.getMoves()[move.prev] && this.getMoves()[move.prev].variations.length > 0;
   }
 
   writePgn(configuration: {} = {}): string {
@@ -518,6 +457,33 @@ export class PgnReader {
       this.chess.load(this.configuration.position);
     }
     return this.chess.fen();
+  }
+  /**
+   * Toggles the active turn indicator in a FEN string between 'w' and 'b'.
+   *
+   * @param fenString A valid FEN string
+   * @returns Modified FEN string with toggled turn
+   */
+  toggleTurnInFen(fenString: string): string {
+    // Split the FEN string into its components
+    const components: string[] = fenString.split(" ");
+
+    // Toggle the turn indicator (second component)
+    if (components[1] === "w") {
+      components[1] = "b";
+    } else {
+      components[1] = "w";
+      // Increment the fullmove number (sixth component) when Black has just moved
+      // (i.e., when we're changing from Black's turn to White's turn)
+      const fullmoveNumber = parseInt(components[5], 10);
+      components[5] = (fullmoveNumber + 1).toString();
+    }
+    // Ensure that ep square is set to "-" when toggling turn
+    components[3] = "-";
+    // Rejoin the components
+    let changed = components.join(" ");
+    // console.log("FEN: " + changed);
+    return changed;
   }
   eachMove(movesMainLine: PgnMove[]) {
     this.moves = [];
@@ -572,37 +538,48 @@ export class PgnReader {
         } else {
           this.setToStart();
         }
-        // TODO: It is not possible to use here `san` instead of  the ugly `notation.notation`. In case of `Pe4`
-        // chess.js spits an error. No solution for this yet.
-        // The current lib sometimes has failures sloppy == true (like bxc6 which is legal), therefore the duplication.
-        let pgn_move = this.chess.move(_move.notation.notation, {
-          sloppy: false,
-        });
-        if (pgn_move === null) {
-          pgn_move = this.chess.move(_move.notation.notation, { sloppy: true });
-          if (pgn_move === null) {
-            throw new Error("No legal move: " + _move.notation.notation);
+        if (_move.notation?.notation == "Z0") {
+          // Handle Z0 notation
+          if (_move.prev) {
+            _move.fen = this.toggleTurnInFen(this.getMove(_move.prev).fen);
+          } else {
+            _move.fen = this.toggleTurnInFen(this.chess.fen());
           }
-        }
-        let fen = this.chess.fen();
-        _move.fen = fen;
-        _move.from = pgn_move.from;
-        _move.to = pgn_move.to;
-        _move.notation.notation = pgn_move.san;
 
-        if (pgn_move.flags === "c") {
-          _move.notation.strike = "x";
-        }
-        if (this.chess.in_checkmate()) {
-          _move.notation.check = "#";
-        } else if (this.chess.in_check()) {
-          _move.notation.check = "+";
-        }
-        _move.moveNumber = getMoveNumberFromPosition(fen);
+          // console.log("Z0 FEN: ", _move.fen);
+        } else {
+          // Handle other notations
+          // TODO: It is not possible to use here `san` instead of  the ugly `notation.notation`. In case of `Pe4`
+          // chess.js spits an error. No solution for this yet.
+          // The current lib sometimes has failures sloppy == true (like bxc6 which is legal), therefore the duplication.
+          let pgn_move = this.chess.move(_move.notation.notation, { sloppy: false });
+          if (pgn_move === null) {
+            pgn_move = this.chess.move(_move.notation.notation, { sloppy: true });
+            if (pgn_move === null) {
+              throw new Error("No legal move: " + _move.notation.notation);
+            }
+          }
+          let fen = this.chess.fen();
+          // console.log("FEN after move:", fen);
+          _move.fen = fen;
+          _move.from = pgn_move.from;
+          _move.to = pgn_move.to;
+          _move.notation.notation = pgn_move.san;
 
-        move.variations.forEach(function (variation) {
-          eachMoveVariation(variation, level + 1, prev);
-        });
+          if (pgn_move.flags === "c") {
+            _move.notation.strike = "x";
+          }
+          if (this.chess.in_checkmate()) {
+            _move.notation.check = "#";
+          } else if (this.chess.in_check()) {
+            _move.notation.check = "+";
+          }
+          _move.moveNumber = getMoveNumberFromPosition(fen);
+
+          move.variations.forEach(function (variation) {
+            eachMoveVariation(variation, level + 1, prev);
+          });
+        }
       });
     };
     eachMoveVariation(movesMainLine, 0, null);
@@ -637,18 +614,14 @@ export class PgnReader {
       let variations = this.getMove(0).variations;
       let vari;
       for (vari in variations) {
-        if (variations[vari].notation.notation === pgn_move.san)
-          return variations[vari].moveNumber;
+        if (variations[vari].notation.notation === pgn_move.san) return variations[vari].moveNumber;
       }
       return null; // no variation found
     };
 
     // Returns the existing move number or null
     // Should include all variations as well
-    let existingMove = (
-      move: PrimitiveMove | string,
-      moveNumber: number,
-    ): number | null => {
+    let existingMove = (move: PrimitiveMove | string, moveNumber: number): number | null => {
       if (moveNumber == null) return existingFirstMove(move);
       let prevMove = this.getMove(moveNumber);
       if (typeof prevMove == "undefined") return null;
@@ -685,8 +658,7 @@ export class PgnReader {
       if (prevMove.next) {
         // has a next move set, so should be a variation
         this.getMove(prevMove.next).variations.push(move);
-        move.variationLevel =
-          (prevMove.variationLevel ? prevMove.variationLevel : 0) + 1;
+        move.variationLevel = (prevMove.variationLevel ? prevMove.variationLevel : 0) + 1;
         if (move.turn === "b") {
           move.moveNumber = prevMove.moveNumber;
         }
@@ -735,15 +707,10 @@ export class PgnReader {
       if (pgn_move.promotion) {
         realMove.notation.promotion = "=" + pgn_move.promotion.toUpperCase();
       }
-      if (
-        pgn_move.flags.includes(this.chess.FLAGS.CAPTURE) ||
-        pgn_move.flags.includes(this.chess.FLAGS.EP_CAPTURE)
-      ) {
+      if (pgn_move.flags.includes(this.chess.FLAGS.CAPTURE) || pgn_move.flags.includes(this.chess.FLAGS.EP_CAPTURE)) {
         realMove.notation.strike = "x";
       }
-      realMove.notation.ep = pgn_move.flags.includes(
-        this.chess.FLAGS.EP_CAPTURE,
-      );
+      realMove.notation.ep = pgn_move.flags.includes(this.chess.FLAGS.EP_CAPTURE);
       if (this.chess.in_check()) {
         if (this.chess.in_checkmate()) {
           realMove.notation.check = "#";
@@ -784,10 +751,7 @@ export class PgnReader {
   }
   // TODO This function is only used once in the whole system, can we get rid of it.
   // And it is only used in the viewer, perhaps it should go to there ...
-  getOrderedMoves(
-    current: PgnReaderMove,
-    returnedMoves: PgnReaderMove[],
-  ): PgnReaderMove[] {
+  getOrderedMoves(current: PgnReaderMove, returnedMoves: PgnReaderMove[]): PgnReaderMove[] {
     if (arguments.length === 0) {
       return this.getOrderedMoves(this.getFirstMove(), []);
     }
@@ -809,10 +773,7 @@ export class PgnReader {
   getFirstMove(): PgnReaderMove | null {
     let _moves = this.getMoves();
     for (const _move of _moves) {
-      if (
-        typeof _move.variationLevel == "undefined" ||
-        (_move.variationLevel == 0 && _move.prev == null)
-      ) {
+      if (typeof _move.variationLevel == "undefined" || (_move.variationLevel == 0 && _move.prev == null)) {
         return _move;
       }
     }
@@ -829,9 +790,7 @@ export class PgnReader {
     if (!this.games) {
       return undefined;
     }
-    return this.games[this.currentGameIndex].gameComment
-      ? this.games[this.currentGameIndex].gameComment
-      : undefined;
+    return this.games[this.currentGameIndex].gameComment ? this.games[this.currentGameIndex].gameComment : undefined;
   }
   getGames(): ParseTree[] {
     return this.games;

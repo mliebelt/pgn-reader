@@ -5,9 +5,7 @@ import { PgnReader, Shape } from "../src";
 import { readFile } from "../src/fetch";
 import { PgnReaderMove } from "@mliebelt/pgn-types";
 
-const reader = suite(
-  "Base functionality of the reader without any configuration",
-);
+const reader = suite("Base functionality of the reader without any configuration");
 
 reader("should be able to read a main line", () => {
   const pgn = "e4 e5 Nf3 Nc6";
@@ -38,27 +36,24 @@ reader("should be able to read a main line with one variant", () => {
   assert.is(prev.turn, "w");
 });
 
-reader(
-  "should be able to read a main line with many variants on different levels",
-  () => {
-    const pgn = "e4 (d4 d5)(c4) e5 Nf3 (f4 d5 (Nc6))";
-    const reader = new PgnReader({ pgn });
+reader("should be able to read a main line with many variants on different levels", () => {
+  const pgn = "e4 (d4 d5)(c4) e5 Nf3 (f4 d5 (Nc6))";
+  const reader = new PgnReader({ pgn });
 
-    assert.is(reader.getMoves().length, 9);
-    assert.is(reader.getMove(0).variations.length, 2);
+  assert.is(reader.getMoves().length, 9);
+  assert.is(reader.getMove(0).variations.length, 2);
 
-    const m3 = reader.getMove(3);
-    assert.is(m3.variations.length, 0);
-    // expect(reader.startVariation(m3)).to.be.true;
-    // expect(reader.endVariation(m3)).to.be.true;
+  const m3 = reader.getMove(3);
+  assert.is(m3.variations.length, 0);
+  // expect(reader.startVariation(m3)).to.be.true;
+  // expect(reader.endVariation(m3)).to.be.true;
 
-    const m8 = reader.getMove(8);
-    assert.is(m8.variationLevel, 2);
+  const m8 = reader.getMove(8);
+  assert.is(m8.variationLevel, 2);
 
-    const prev8 = reader.getMove(m8.prev);
-    assert.is(prev8.variationLevel, 1);
-  },
-);
+  const prev8 = reader.getMove(m8.prev);
+  assert.is(prev8.variationLevel, 1);
+});
 
 reader("should understand game comment and after comment in principle", () => {
   const pgn = "{START} 1. d4 {AFTER} e5";
@@ -173,21 +168,13 @@ config("should ensure that different positions are understood", function () {
   let reader = new PgnReader({ pgn: "e4", position: "start" });
   assert.ok(reader);
   assert.is(reader.getMoves().length, 1);
-  assert.ok(
-    reader
-      .getPosition(null)
-      .startsWith("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"),
-  );
+  assert.ok(reader.getPosition(null).startsWith("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"));
   reader = new PgnReader({
     pgn: "e5",
     position: "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1",
   });
   assert.is(reader.getMoves().length, 1);
-  assert.ok(
-    reader
-      .getPosition(0)
-      .startsWith("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR"),
-  );
+  assert.ok(reader.getPosition(0).startsWith("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR"));
 });
 config("should ensure that configuring manyGames works", function () {
   const reader = new PgnReader({ manyGames: true, pgn: "e4 e5 *\n\nd4 d5 *" });
@@ -196,14 +183,11 @@ config("should ensure that configuring manyGames works", function () {
   assert.is(reader.getGames().length, 2);
 });
 // The following should be part of another suite ...
-config(
-  "should emmit an error when reading many games with `manyGames == true`",
-  () => {
-    assert.throws(() => {
-      new PgnReader({ pgn: "e4 e5 *\n\nd4 d5 *" });
-    }, "Expected end of input or whitespace but &quot;d&quot; found.");
-  },
-);
+config("should emmit an error when reading many games with `manyGames == true`", () => {
+  assert.throws(() => {
+    new PgnReader({ pgn: "e4 e5 *\n\nd4 d5 *" });
+  }, "Expected end of input or whitespace but &quot;d&quot; found.");
+});
 
 config("should ensure that lazyLoad works", () => {
   const reader = new PgnReader({
@@ -230,14 +214,11 @@ config("should ensure that pgnFile works (workaround)", () => {
   assert.is(reader.getGames().length, 2);
 });
 
-config(
-  "should ensure that error is thrown if file is not found / could not be read (workaround)",
-  () => {
-    assert.throws(() => {
-      readFile("2games-missing.pgn");
-    }, "File not found or could not read: 2games-missing.pgn");
-  },
-);
+config("should ensure that error is thrown if file is not found / could not be read (workaround)", () => {
+  assert.throws(() => {
+    readFile("2games-missing.pgn");
+  }, "File not found or could not read: 2games-missing.pgn");
+});
 
 config("should ensure that startPlay works", () => {
   const reader = new PgnReader({
@@ -272,44 +253,32 @@ formats("should use disambiguator on output", () => {
   assert.equal(reader.sanWithNags(reader.getMove(0)), "dxe5");
 });
 
-formats(
-  "should understand that Long Algebraic Notation can be used when strike",
-  () => {
-    const reader = new PgnReader({
-      pgn: "4... Nf6xe4",
-      position:
-        "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQ1RK1 b kq - 5 4",
-    });
-    assert.equal(reader.sanWithNags(reader.getMove(0)), "Nxe4");
-  },
-);
+formats("should understand that Long Algebraic Notation can be used when strike", () => {
+  const reader = new PgnReader({
+    pgn: "4... Nf6xe4",
+    position: "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQ1RK1 b kq - 5 4",
+  });
+  assert.equal(reader.sanWithNags(reader.getMove(0)), "Nxe4");
+});
 
-formats(
-  "should understand that Long Algebraic Notation can leave out strike symbol",
-  () => {
-    const reader = new PgnReader({
-      pgn: "4... Nf6e4",
-      position:
-        "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQ1RK1 b kq - 5 4",
-    });
-    assert.equal(reader.sanWithNags(reader.getMove(0)), "Nxe4");
-  },
-);
+formats("should understand that Long Algebraic Notation can leave out strike symbol", () => {
+  const reader = new PgnReader({
+    pgn: "4... Nf6e4",
+    position: "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQ1RK1 b kq - 5 4",
+  });
+  assert.equal(reader.sanWithNags(reader.getMove(0)), "Nxe4");
+});
 
-formats(
-  "should understand that Long Algebraic Notation can be used when bishop",
-  () => {
-    const reader = new PgnReader({ pgn: "1. e2-e4 e7-e5" });
-    assert.equal(reader.sanWithNags(reader.getMove(0)), "e4");
-    assert.equal(reader.sanWithNags(reader.getMove(1)), "e5");
-  },
-);
+formats("should understand that Long Algebraic Notation can be used when bishop", () => {
+  const reader = new PgnReader({ pgn: "1. e2-e4 e7-e5" });
+  assert.equal(reader.sanWithNags(reader.getMove(0)), "e4");
+  assert.equal(reader.sanWithNags(reader.getMove(1)), "e5");
+});
 
 formats("should understand that disambiguator is needed here", () => {
   const reader = new PgnReader({
     pgn: "fxe5",
-    position:
-      "r1bqkb1r/pppp1ppp/2n2n2/4p3/3PPP2/8/PPP3PP/RNBQKBNR w KQkq - 1 4",
+    position: "r1bqkb1r/pppp1ppp/2n2n2/4p3/3PPP2/8/PPP3PP/RNBQKBNR w KQkq - 1 4",
   });
 
   assert.equal(reader.sanWithNags(reader.getMove(0)), "fxe5");
@@ -346,9 +315,7 @@ formats("should understand that disambiguator is needed here", () => {
 
 formats.run();
 
-const beginningsEndings = suite(
-  "When working with different PGN beginnings and endings",
-);
+const beginningsEndings = suite("When working with different PGN beginnings and endings");
 
 beginningsEndings("should work with no moves at all", () => {
   const reader = new PgnReader({ pgn: "" });
@@ -426,18 +393,15 @@ notation("should know different variants of strikes", () => {
   assert.equal(reader.getMoves()[2].notation.notation, "exd5");
 });
 
-notation(
-  "should know all special symbols normally needed (promotion, check, mate)",
-  () => {
-    let reader = new PgnReader({ pgn: "1. f3 e5 2. g4 Qh4#" });
-    assert.equal(reader.getMoves().length, 4);
+notation("should know all special symbols normally needed (promotion, check, mate)", () => {
+  let reader = new PgnReader({ pgn: "1. f3 e5 2. g4 Qh4#" });
+  assert.equal(reader.getMoves().length, 4);
 
-    new PgnReader({
-      pgn: "1. e7 d2 2. e8=Q d1=R+",
-      position: "5rk1/8/4P3/8/8/3p4/5R2/6K1 w - - 0 1",
-    });
-  },
-);
+  new PgnReader({
+    pgn: "1. e7 d2 2. e8=Q d1=R+",
+    position: "5rk1/8/4P3/8/8/3p4/5R2/6K1 w - - 0 1",
+  });
+});
 
 notation("should be robust with missing symbols (check)", () => {
   const reader = new PgnReader({
@@ -448,10 +412,7 @@ notation("should be robust with missing symbols (check)", () => {
   assert.equal(reader.getMoves()[10].notation.check, "+");
 
   const res = reader.writePgn();
-  assert.equal(
-    res,
-    "1. e4 e5 2. Nf3 d6 3. Bc4 Bg4 4. Nc3 h6 5. Nxe5 Bxd1 6. Bxf7+ Ke7 7. Nd5#",
-  );
+  assert.equal(res, "1. e4 e5 2. Nf3 d6 3. Bc4 Bg4 4. Nc3 h6 5. Nxe5 Bxd1 6. Bxf7+ Ke7 7. Nd5#");
 });
 
 notation("should be robust with missing symbols (mate)", () => {
@@ -463,10 +424,7 @@ notation("should be robust with missing symbols (mate)", () => {
   assert.equal(reader.getMoves()[12].notation.check, "#");
 
   const res = reader.writePgn();
-  assert.equal(
-    res,
-    "1. e4 e5 2. Nf3 d6 3. Bc4 Bg4 4. Nc3 h6 5. Nxe5 Bxd1 6. Bxf7+ Ke7 7. Nd5#",
-  );
+  assert.equal(res, "1. e4 e5 2. Nf3 d6 3. Bc4 Bg4 4. Nc3 h6 5. Nxe5 Bxd1 6. Bxf7+ Ke7 7. Nd5#");
 });
 
 notation.run();
@@ -485,11 +443,7 @@ tags.before((context) => {
     '[SetUp "0"]',
     "1. e4 e5 2. Nf3 Nc6",
   ];
-  context.pgn_string2 = [
-    '[SetUp "1"]',
-    '[FEN "8/p6p/P5p1/8/4p1K1/6q1/5k2/8 w - - 12 57"]',
-    "*",
-  ];
+  context.pgn_string2 = ['[SetUp "1"]', '[FEN "8/p6p/P5p1/8/4p1K1/6q1/5k2/8 w - - 12 57"]', "*"];
   context.reader = new PgnReader({ pgn: context.pgn_string.join(" ") });
   context.reader2 = new PgnReader({ pgn: context.pgn_string2.join(" ") });
 });
@@ -507,10 +461,7 @@ tags("should have tag mapped to FEN", (context) => {
   // test setup
 
   assert.equal(context.reader2.getTags().SetUp, "1");
-  assert.equal(
-    context.reader2.configuration.position,
-    "8/p6p/P5p1/8/4p1K1/6q1/5k2/8 w - - 12 57",
-  );
+  assert.equal(context.reader2.configuration.position, "8/p6p/P5p1/8/4p1K1/6q1/5k2/8 w - - 12 57");
 });
 
 tags("should accept variations of case in tags", () => {
@@ -518,17 +469,12 @@ tags("should accept variations of case in tags", () => {
     pgn: '[Setup "1"] [fen "8/p6p/P5p1/8/4p1K1/6q1/5k2/8 w - - 12 57"] *',
   });
   assert.equal(pgn.getTags().SetUp, "1");
-  assert.equal(
-    pgn.configuration.position,
-    "8/p6p/P5p1/8/4p1K1/6q1/5k2/8 w - - 12 57",
-  );
+  assert.equal(pgn.configuration.position, "8/p6p/P5p1/8/4p1K1/6q1/5k2/8 w - - 12 57");
 });
 
 tags("should understand unknown tags and record them", () => {
   let pgn = new PgnReader({
-    pgn:
-      '[PuzzleCategory "Material"] [PuzzleEngine "Stockfish 13"] ' +
-      '[PuzzleMakerVersion "0.5"] [PuzzleWinner "White"] *',
+    pgn: '[PuzzleCategory "Material"] [PuzzleEngine "Stockfish 13"] ' + '[PuzzleMakerVersion "0.5"] [PuzzleWinner "White"] *',
   });
   let tags = pgn.getTags();
   assert.equal(tags.PuzzleCategory, "Material");
@@ -556,10 +502,7 @@ variations("should understand one variation for white", () => {
   assert.equal(reader.getMove(2).variations.length, 1);
   assert.equal(reader.getMove(3).variations.length, 0);
   assert.equal(reader.getMove(2).variations[0].notation.notation, "Nf3");
-  assert.equal(
-    reader.getMove(reader.getMove(2).variations[0].next).notation.notation,
-    "Nc6",
-  );
+  assert.equal(reader.getMove(reader.getMove(2).variations[0].next).notation.notation, "Nc6");
   assert.equal(reader.getMove(3).prev, 1);
   assert.equal(reader.getMove(1).next, 2);
   assert.equal(reader.getMove(3).next, 4);
@@ -576,31 +519,25 @@ variations("should understand one variation for black with move number", () => {
   assert.equal(reader.getMove(3).prev, 2);
 });
 
-variations(
-  "should understand all variations for black and white with different move number formats",
-  () => {
-    const reader = new PgnReader({
-      pgn: "1. e4 (1... c4?) e5 (1... d5 2 exd5 2... Qxd5)",
-    });
-    assert.equal(reader.getMove(0).variations.length, 1);
-    assert.equal(reader.getMove(1).variations.length, 0);
-    assert.equal(reader.getMove(2).variations[0].notation.notation, "d5");
-    assert.equal(reader.getMove(3).prev, 0);
-    assert.equal(reader.getMove(4).prev, 3);
-  },
-);
+variations("should understand all variations for black and white with different move number formats", () => {
+  const reader = new PgnReader({
+    pgn: "1. e4 (1... c4?) e5 (1... d5 2 exd5 2... Qxd5)",
+  });
+  assert.equal(reader.getMove(0).variations.length, 1);
+  assert.equal(reader.getMove(1).variations.length, 0);
+  assert.equal(reader.getMove(2).variations[0].notation.notation, "d5");
+  assert.equal(reader.getMove(3).prev, 0);
+  assert.equal(reader.getMove(4).prev, 3);
+});
 
-variations(
-  "should understand one variation for black without move number",
-  () => {
-    const reader = new PgnReader({ pgn: "1. e4 e5 (d5 2. exd5 Qxd5)" });
-    assert.equal(reader.getMove(1).variations.length, 1);
-    assert.equal(reader.getMove(0).variations.length, 0);
-    assert.equal(reader.getMove(1).variations[0].notation.notation, "d5");
-    assert.equal(reader.getMove(2).prev, 0);
-    assert.equal(reader.getMove(3).prev, 2);
-  },
-);
+variations("should understand one variation for black without move number", () => {
+  const reader = new PgnReader({ pgn: "1. e4 e5 (d5 2. exd5 Qxd5)" });
+  assert.equal(reader.getMove(1).variations.length, 1);
+  assert.equal(reader.getMove(0).variations.length, 0);
+  assert.equal(reader.getMove(1).variations[0].notation.notation, "d5");
+  assert.equal(reader.getMove(2).prev, 0);
+  assert.equal(reader.getMove(3).prev, 2);
+});
 
 variations("should understand nested variations", () => {
   const reader = new PgnReader({
@@ -625,13 +562,10 @@ variations("should know about variations in syntax for variants", () => {
   assert.equal(reader.getMove(1).variations[0].notation.notation, "d5");
 });
 
-variations(
-  "should know about variations in syntax for variants including results",
-  () => {
-    const reader = new PgnReader({ pgn: "1. e4 e5 ( 1... d5 ) 1-0" });
-    assert.equal(reader.getMove(1).variations[0].notation.notation, "d5");
-  },
-);
+variations("should know about variations in syntax for variants including results", () => {
+  const reader = new PgnReader({ pgn: "1. e4 e5 ( 1... d5 ) 1-0" });
+  assert.equal(reader.getMove(1).variations[0].notation.notation, "d5");
+});
 variations.run();
 
 const iterating = suite("When iterating over moves");
@@ -714,26 +648,23 @@ iterating("should know its previous and next move", function () {
   assert.is(moves[4].next, undefined);
 });
 
-iterating(
-  "should know its previous and next move with 2 variations",
-  function () {
-    const moves = new PgnReader({
-      pgn: "1. e4 e5 (1... d5 2. exd5) (1... c5) 2. d4",
-    }).getMoves();
-    assert.is(moves[0].prev, undefined);
-    assert.equal(moves[0].next, 1);
-    assert.equal(moves[1].prev, 0);
-    assert.equal(moves[1].next, 5);
-    assert.equal(moves[2].prev, 0);
-    assert.equal(moves[2].next, 3);
-    assert.equal(moves[3].prev, 2);
-    assert.is(moves[3].next, undefined);
-    assert.equal(moves[4].prev, 0);
-    assert.is(moves[4].next, undefined);
-    assert.equal(moves[5].prev, 1);
-    assert.is(moves[5].next, undefined);
-  },
-);
+iterating("should know its previous and next move with 2 variations", function () {
+  const moves = new PgnReader({
+    pgn: "1. e4 e5 (1... d5 2. exd5) (1... c5) 2. d4",
+  }).getMoves();
+  assert.is(moves[0].prev, undefined);
+  assert.equal(moves[0].next, 1);
+  assert.equal(moves[1].prev, 0);
+  assert.equal(moves[1].next, 5);
+  assert.equal(moves[2].prev, 0);
+  assert.equal(moves[2].next, 3);
+  assert.equal(moves[3].prev, 2);
+  assert.is(moves[3].next, undefined);
+  assert.equal(moves[4].prev, 0);
+  assert.is(moves[4].next, undefined);
+  assert.equal(moves[5].prev, 1);
+  assert.is(moves[5].next, undefined);
+});
 
 iterating("should read complete games", function () {
   const moves = new PgnReader({
@@ -820,14 +751,11 @@ writingPgn("should write only a result if an empty pgn string is given", () => {
   assert.equal(res.trim(), "*");
 });
 
-writingPgn(
-  "should write the normalized notation of the main line with only one move",
-  () => {
-    const reader = new PgnReader({ pgn: "1. e4" });
-    const res = reader.writePgn();
-    assert.equal(res, "1. e4");
-  },
-);
+writingPgn("should write the normalized notation of the main line with only one move", () => {
+  const reader = new PgnReader({ pgn: "1. e4" });
+  const res = reader.writePgn();
+  assert.equal(res, "1. e4");
+});
 
 writingPgn("should write the normalized notation of the main line", () => {
   const reader = new PgnReader({ pgn: "1. e4 e5 2. Nf3 Nc6 3. Bb5" });
@@ -835,16 +763,13 @@ writingPgn("should write the normalized notation of the main line", () => {
   assert.equal(res, "1. e4 e5 2. Nf3 Nc6 3. Bb5");
 });
 
-writingPgn(
-  "should write the notation for a main line including comments",
-  () => {
-    const reader = new PgnReader({
-      pgn: "{FIRST} 1. e4 {THIRD} e5 {FOURTH} 2. Nf3 Nc6 3. Bb5",
-    });
-    const res = reader.writePgn();
-    assert.equal(res, "{FIRST} 1. e4 {THIRD} e5 {FOURTH} 2. Nf3 Nc6 3. Bb5");
-  },
-);
+writingPgn("should write the notation for a main line including comments", () => {
+  const reader = new PgnReader({
+    pgn: "{FIRST} 1. e4 {THIRD} e5 {FOURTH} 2. Nf3 Nc6 3. Bb5",
+  });
+  const res = reader.writePgn();
+  assert.equal(res, "{FIRST} 1. e4 {THIRD} e5 {FOURTH} 2. Nf3 Nc6 3. Bb5");
+});
 
 writingPgn("should write all NAGs in the $<NUMBER> format", () => {
   const reader = new PgnReader({
@@ -854,127 +779,81 @@ writingPgn("should write all NAGs in the $<NUMBER> format", () => {
   assert.equal(res, "1. e4$1 e5$2 2. Nf3$3 Nc6$4 3. Bb5$6 a6$5");
 });
 
-writingPgn(
-  "should write the notation for a main line with one variation",
-  () => {
-    const reader = new PgnReader({
-      pgn: "1. e4 e5 ( 1... d5 2. exd5 Qxd5 ) 2. Nf3",
-    });
-    const res = reader.writePgn();
-    assert.equal(res, "1. e4 e5 ( 1... d5 2. exd5 Qxd5 ) 2. Nf3");
-  },
-);
+writingPgn("should write the notation for a main line with one variation", () => {
+  const reader = new PgnReader({
+    pgn: "1. e4 e5 ( 1... d5 2. exd5 Qxd5 ) 2. Nf3",
+  });
+  const res = reader.writePgn();
+  assert.equal(res, "1. e4 e5 ( 1... d5 2. exd5 Qxd5 ) 2. Nf3");
+});
 
-writingPgn(
-  "should write the notation for a main line with several variations",
-  function () {
-    const reader = new PgnReader({
-      pgn: "1. e4 e5 ( 1... d5 2. exd5 Qxd5 ) ( 1... c5 2. Nf3 d6 ) 2. Nf3",
-    });
-    const res = reader.writePgn();
-    assert.equal(
-      res,
-      "1. e4 e5 ( 1... d5 2. exd5 Qxd5 ) ( 1... c5 2. Nf3 d6 ) 2. Nf3",
-    );
-  },
-);
+writingPgn("should write the notation for a main line with several variations", function () {
+  const reader = new PgnReader({
+    pgn: "1. e4 e5 ( 1... d5 2. exd5 Qxd5 ) ( 1... c5 2. Nf3 d6 ) 2. Nf3",
+  });
+  const res = reader.writePgn();
+  assert.equal(res, "1. e4 e5 ( 1... d5 2. exd5 Qxd5 ) ( 1... c5 2. Nf3 d6 ) 2. Nf3");
+});
 
-writingPgn(
-  "should write the notation for a main line with stacked variations",
-  function () {
-    const reader = new PgnReader({
-      pgn: "1. e4 e5 ( 1... c5 2. Nf3 d6 ( 2... Nc6 3. d4) 3. d4 ) 2. Nf3",
-    });
-    const res = reader.writePgn();
-    assert.equal(
-      res,
-      "1. e4 e5 ( 1... c5 2. Nf3 d6 ( 2... Nc6 3. d4 ) 3. d4 ) 2. Nf3",
-    );
-  },
-);
+writingPgn("should write the notation for a main line with stacked variations", function () {
+  const reader = new PgnReader({
+    pgn: "1. e4 e5 ( 1... c5 2. Nf3 d6 ( 2... Nc6 3. d4) 3. d4 ) 2. Nf3",
+  });
+  const res = reader.writePgn();
+  assert.equal(res, "1. e4 e5 ( 1... c5 2. Nf3 d6 ( 2... Nc6 3. d4 ) 3. d4 ) 2. Nf3");
+});
 writingPgn("should write the end of the game", function () {
   const reader = new PgnReader({ pgn: "1. e4 e5 0-1" });
   assert.equal(reader.writePgn({ tags: "no" }), "1. e4 e5 0-1");
 });
-writingPgn(
-  "should write the end of the game, understand all results: 1-0",
-  function () {
-    const reader = new PgnReader({ pgn: "1. e4 e5 1-0" });
-    assert.equal(reader.writePgn({ tags: "no" }), "1. e4 e5 1-0");
-  },
-);
-writingPgn(
-  "should write the end of the game, understand all results: *",
-  function () {
-    const reader = new PgnReader({ pgn: "1. e4 e5 *" });
-    assert.equal(reader.writePgn({ tags: "no" }), "1. e4 e5 *");
-  },
-);
-writingPgn(
-  "should write the end of the game, understand all results: 1/2-1/2",
-  function () {
-    const reader = new PgnReader({ pgn: "1. e4 e5 1/2-1/2" });
-    assert.equal(reader.writePgn({ tags: "no" }), "1. e4 e5 1/2-1/2");
-  },
-);
+writingPgn("should write the end of the game, understand all results: 1-0", function () {
+  const reader = new PgnReader({ pgn: "1. e4 e5 1-0" });
+  assert.equal(reader.writePgn({ tags: "no" }), "1. e4 e5 1-0");
+});
+writingPgn("should write the end of the game, understand all results: *", function () {
+  const reader = new PgnReader({ pgn: "1. e4 e5 *" });
+  assert.equal(reader.writePgn({ tags: "no" }), "1. e4 e5 *");
+});
+writingPgn("should write the end of the game, understand all results: 1/2-1/2", function () {
+  const reader = new PgnReader({ pgn: "1. e4 e5 1/2-1/2" });
+  assert.equal(reader.writePgn({ tags: "no" }), "1. e4 e5 1/2-1/2");
+});
 writingPgn("should write the end of the game as part of tags", function () {
   const reader = new PgnReader({ pgn: '[Result "0-1"] 1. e4 e5' });
   assert.equal(reader.writePgn({ tags: "no" }), "1. e4 e5 0-1");
 });
-writingPgn(
-  "should write the end of the game as part of tags, understand all results: *",
-  function () {
-    const reader = new PgnReader({ pgn: '[Result "*"] 1. e4 e5' });
-    assert.equal(reader.writePgn({ tags: "no" }), "1. e4 e5 *");
-  },
-);
-writingPgn(
-  "should write the end of the game as part of tags, understand all results: 1/2-1/2",
-  function () {
-    const reader = new PgnReader({ pgn: '[Result "1/2-1/2"] 1. e4 e5' });
-    assert.equal(reader.writePgn({ tags: "no" }), "1. e4 e5 1/2-1/2");
-  },
-);
-writingPgn(
-  "should write the end of the game as part of tags, understand all results: 1-0",
-  function () {
-    const reader = new PgnReader({ pgn: '[Result "1-0"] 1. e4 e5' });
-    assert.equal(reader.writePgn({ tags: "no" }), "1. e4 e5 1-0");
-  },
-);
+writingPgn("should write the end of the game as part of tags, understand all results: *", function () {
+  const reader = new PgnReader({ pgn: '[Result "*"] 1. e4 e5' });
+  assert.equal(reader.writePgn({ tags: "no" }), "1. e4 e5 *");
+});
+writingPgn("should write the end of the game as part of tags, understand all results: 1/2-1/2", function () {
+  const reader = new PgnReader({ pgn: '[Result "1/2-1/2"] 1. e4 e5' });
+  assert.equal(reader.writePgn({ tags: "no" }), "1. e4 e5 1/2-1/2");
+});
+writingPgn("should write the end of the game as part of tags, understand all results: 1-0", function () {
+  const reader = new PgnReader({ pgn: '[Result "1-0"] 1. e4 e5' });
+  assert.equal(reader.writePgn({ tags: "no" }), "1. e4 e5 1-0");
+});
 writingPgn("should write promotion correct", function () {
   const reader = new PgnReader({
     position: "8/6P1/8/2k5/8/8/8/7K w - - 0 1",
     pgn: "1. g8=R",
   });
-  assert.equal(
-    reader.writePgn(),
-    '[SetUp "1"]\n[FEN "8/6P1/8/2k5/8/8/8/7K w - - 0 1"]\n\n1. g8=R',
-  );
+  assert.equal(reader.writePgn(), '[SetUp "1"]\n[FEN "8/6P1/8/2k5/8/8/8/7K w - - 0 1"]\n\n1. g8=R');
 });
 writingPgn("should write TimeControl tags as expected", function () {
   const reader = new PgnReader({
     pgn: '[TimeControl "40/6000+30:3000+30"] 1. e4 e5',
   });
-  assert.equal(
-    reader.writePgn(),
-    '[TimeControl "40/6000+30:3000+30"]\n\n1. e4 e5',
-  );
+  assert.equal(reader.writePgn(), '[TimeControl "40/6000+30:3000+30"]\n\n1. e4 e5');
 });
-writingPgn(
-  "should write SetUp tags as expected (even when position is given in configuration)",
-  function () {
-    const reader = new PgnReader({
-      pgn: "Bb5",
-      position:
-        "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
-    });
-    assert.equal(
-      reader.writePgn(),
-      '[SetUp "1"]\n[FEN "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3"]\n\n3. Bb5',
-    );
-  },
-);
+writingPgn("should write SetUp tags as expected (even when position is given in configuration)", function () {
+  const reader = new PgnReader({
+    pgn: "Bb5",
+    position: "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3",
+  });
+  assert.equal(reader.writePgn(), '[SetUp "1"]\n[FEN "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3"]\n\n3. Bb5');
+});
 
 writingPgn.run();
 
@@ -987,15 +866,12 @@ endGame("should return the correct result with getEndGame", () => {
   assert.equal(reader.getEndGame(), "1-0");
 });
 
-endGame(
-  "should return null with getEndGame if there was no end game noted",
-  () => {
-    const reader = new PgnReader({ pgn: "e4" });
-    assert.equal(reader.getGames().length, 1);
-    assert.equal(reader.getMoves().length, 1);
-    assert.is(reader.getEndGame(), undefined);
-  },
-);
+endGame("should return null with getEndGame if there was no end game noted", () => {
+  const reader = new PgnReader({ pgn: "e4" });
+  assert.equal(reader.getGames().length, 1);
+  assert.equal(reader.getMoves().length, 1);
+  assert.is(reader.getEndGame(), undefined);
+});
 
 endGame("should return the correct end game if switching games", () => {
   const reader = new PgnReader({
@@ -1062,8 +938,7 @@ sanSuite("should emmit correct discriminator", () => {
   });
   assert.equal(san, "R1a3");
   reader = new PgnReader({
-    position:
-      "r1b1kbnr/p2q1p2/2n1p2p/R1pp2p1/1PPP3P/5N2/4PPP1/RNBQKB2 w kq - 4 12",
+    position: "r1b1kbnr/p2q1p2/2n1p2p/R1pp2p1/1PPP3P/5N2/4PPP1/RNBQKB2 w kq - 4 12",
   });
   san = reader.san(<PgnReaderMove>{
     nag: [],
@@ -1074,8 +949,7 @@ sanSuite("should emmit correct discriminator", () => {
   });
   assert.equal(san, "Nbd2");
   reader = new PgnReader({
-    position:
-      "r1b1kbnr/p2q1p2/2n1p2p/R1pp2p1/1PPP3P/5N2/4PPP1/RNBQKB2 w kq - 4 12",
+    position: "r1b1kbnr/p2q1p2/2n1p2p/R1pp2p1/1PPP3P/5N2/4PPP1/RNBQKB2 w kq - 4 12",
   });
   san = reader.san(<PgnReaderMove>{
     nag: [],
@@ -1089,8 +963,7 @@ sanSuite("should emmit correct discriminator", () => {
 
 sanSuite("should know pinned pieces when no discriminator is needed", () => {
   const reader = new PgnReader({
-    position:
-      "rnbqk1nr/pppp2pp/4p3/8/1b1Pp3/2N3N1/PPP2PPP/R1BQKB1R w KQkq - 0 1",
+    position: "rnbqk1nr/pppp2pp/4p3/8/1b1Pp3/2N3N1/PPP2PPP/R1BQKB1R w KQkq - 0 1",
   });
   let san: string = reader.san(<PgnReaderMove>{
     nag: [],
@@ -1151,10 +1024,8 @@ manyGames("should ensure lazyLoad and loadOne works", () => {
   reader.loadOne(2);
   assert.equal(reader.san(reader.getMove(0)), "c4");
 });
-manyGames(
-  "should ensure switching games with games defined by FEN works",
-  () => {
-    const pgn = `[Event "DoorZetten_17_0624"]
+manyGames("should ensure switching games with games defined by FEN works", () => {
+  const pgn = `[Event "DoorZetten_17_0624"]
 [Site "?"]
 [Date "2024.04.08"]
 [Round "?"]
@@ -1195,13 +1066,12 @@ Bxd8 Bb4+ 8. Qd2 Kxd8 9. e3 Bxd2+ 10. Kxd2 *
 
 {[%evp 0,12,19,38,42,38,72,65,58,64,93,94,81,90,165]} 1. e4 d5 2. exd5 Qxd5 3.
 Nc3 Qa5 4. Nf3 Bg4 5. h3*`;
-    const reader = new PgnReader({ pgn: pgn, manyGames: true });
-    assert.equal(reader.getGames().length, 3);
-    reader.loadOne(1); // Will lead to an error initially.
-    reader.loadOne(2);
-    reader.loadOne(0);
-  },
-);
+  const reader = new PgnReader({ pgn: pgn, manyGames: true });
+  assert.equal(reader.getGames().length, 3);
+  reader.loadOne(1); // Will lead to an error initially.
+  reader.loadOne(2);
+  reader.loadOne(0);
+});
 
 manyGames.run();
 
@@ -1217,19 +1087,16 @@ nextMoves("should compute possibleMoves in postion after 4 moves", () => {
   assert.equal(moves.get("f3").length, 5);
 });
 
-nextMoves(
-  "should compute possibleMoves for a given position (nearly mate)",
-  () => {
-    const reader = new PgnReader({
-      position: "3k3R/8/4K3/8/8/8/8/8 b - - 0 1",
-    });
-    const moves = reader.possibleMoves("3k3R/8/4K3/8/8/8/8/8 b - - 0 1");
+nextMoves("should compute possibleMoves for a given position (nearly mate)", () => {
+  const reader = new PgnReader({
+    position: "3k3R/8/4K3/8/8/8/8/8 b - - 0 1",
+  });
+  const moves = reader.possibleMoves("3k3R/8/4K3/8/8/8/8/8 b - - 0 1");
 
-    assert.ok(moves);
-    assert.equal(moves.get("d8").length, 1);
-    assert.equal(moves.get("d8")[0], "c7");
-  },
-);
+  assert.ok(moves);
+  assert.equal(moves.get("d8").length, 1);
+  assert.equal(moves.get("d8")[0], "c7");
+});
 
 nextMoves.run();
 
@@ -1284,21 +1151,18 @@ makingMoves("should start new variation in the middle of the main line", () => {
   assert.equal(reader.getMove(2).variations[0].notation.notation, "f4");
 });
 
-makingMoves(
-  "should start a second variation in the middle of the main line, when the current move has already a variation",
-  () => {
-    const reader = new PgnReader({ pgn: "1. e4 e5 2. Nf3 Nc6" });
-    reader.addMove({ from: "f2", to: "f4" }, 1);
-    reader.addMove({ from: "d2", to: "d4" }, 1);
+makingMoves("should start a second variation in the middle of the main line, when the current move has already a variation", () => {
+  const reader = new PgnReader({ pgn: "1. e4 e5 2. Nf3 Nc6" });
+  reader.addMove({ from: "f2", to: "f4" }, 1);
+  reader.addMove({ from: "d2", to: "d4" }, 1);
 
-    assert.equal(reader.getMoves().length, 6);
-    assert.equal(reader.getMove(5).turn, "w");
-    assert.equal(reader.getMove(5).notation.notation, "d4");
-    assert.equal(reader.getMove(2).variations.length, 2);
-    assert.equal(reader.getMove(2).variations[0].notation.notation, "f4");
-    assert.equal(reader.getMove(2).variations[1].notation.notation, "d4");
-  },
-);
+  assert.equal(reader.getMoves().length, 6);
+  assert.equal(reader.getMove(5).turn, "w");
+  assert.equal(reader.getMove(5).notation.notation, "d4");
+  assert.equal(reader.getMove(2).variations.length, 2);
+  assert.equal(reader.getMove(2).variations[0].notation.notation, "f4");
+  assert.equal(reader.getMove(2).variations[1].notation.notation, "d4");
+});
 
 makingMoves("should use the existing move in the variation", () => {
   const reader = new PgnReader({ pgn: "1. d4 e5" });
@@ -1348,24 +1212,21 @@ deletingLines("should delete the rest of the line (without variation)", () => {
   assert.is(reader.isDeleted(3), true);
 });
 
-deletingLines(
-  "should delete the rest of the line, replace it by the first variation",
-  () => {
-    const reader = new PgnReader({ pgn: "1. e4 e5  2. Nf3 (2. f4 exf4) Nc6" });
-    assert.equal(reader.getMove(3).variationLevel, 1);
+deletingLines("should delete the rest of the line, replace it by the first variation", () => {
+  const reader = new PgnReader({ pgn: "1. e4 e5  2. Nf3 (2. f4 exf4) Nc6" });
+  assert.equal(reader.getMove(3).variationLevel, 1);
 
-    reader.deleteMove(2);
+  reader.deleteMove(2);
 
-    assert.is(reader.isDeleted(0), false);
-    assert.is(reader.isDeleted(1), false);
-    assert.is(reader.isDeleted(2), true);
-    assert.is(reader.isDeleted(5), true);
+  assert.is(reader.isDeleted(0), false);
+  assert.is(reader.isDeleted(1), false);
+  assert.is(reader.isDeleted(2), true);
+  assert.is(reader.isDeleted(5), true);
 
-    assert.equal(reader.getMove(3).variationLevel, 0);
-    assert.equal(reader.getMove(4).variationLevel, 0);
-    assert.equal(reader.getMove(1).next, 3);
-  },
-);
+  assert.equal(reader.getMove(3).variationLevel, 0);
+  assert.equal(reader.getMove(4).variationLevel, 0);
+  assert.equal(reader.getMove(1).next, 3);
+});
 
 deletingLines("should delete the whole variation with the first move", () => {
   const reader = new PgnReader({
@@ -1386,20 +1247,17 @@ deletingLines("should delete the whole variation with the first move", () => {
   assert.equal(reader.getMove(6).variationLevel, 1);
 });
 
-deletingLines(
-  "should delete the rest of a variation (including the move)",
-  () => {
-    const reader = new PgnReader({
-      pgn: "1. e4 e5  2. Nf3 (2. f4 exf4 3. Nf3 d6) (2. d4 exd4) Nc6",
-    });
-    assert.equal(reader.getMove(3).variationLevel, 1);
+deletingLines("should delete the rest of a variation (including the move)", () => {
+  const reader = new PgnReader({
+    pgn: "1. e4 e5  2. Nf3 (2. f4 exf4 3. Nf3 d6) (2. d4 exd4) Nc6",
+  });
+  assert.equal(reader.getMove(3).variationLevel, 1);
 
-    reader.deleteMove(4);
+  reader.deleteMove(4);
 
-    assert.is(reader.isDeleted(3), false);
-    assert.is(reader.isDeleted(4), true);
-  },
-);
+  assert.is(reader.isDeleted(3), false);
+  assert.is(reader.isDeleted(4), true);
+});
 
 // The following test case is wrong, and should be rewritten: what does the move number denote? why deleting 2 times?
 // Asserts have to be useful (like what is the resulting pgn then)
@@ -1457,63 +1315,51 @@ upvotingLines("should ignore upvoting the main line", (context) => {
   assert.equal(reader.getMove(2).variations[1].index, 5);
 });
 
-upvotingLines(
-  "should handle first move variations, upvote first line",
-  (context) => {
-    let reader = new PgnReader({ pgn: context.pgn2 });
+upvotingLines("should handle first move variations, upvote first line", (context) => {
+  let reader = new PgnReader({ pgn: context.pgn2 });
 
-    assert.equal(reader.getMoves().length, 6);
+  assert.equal(reader.getMoves().length, 6);
 
-    reader.promoteMove(1);
+  reader.promoteMove(1);
 
-    assert.equal(reader.getMove(1).variationLevel, 0);
-    assert.equal(reader.getMove(1).variations[0].index, 0);
-    assert.equal(reader.getMove(0).variationLevel, 1);
-  },
-);
+  assert.equal(reader.getMove(1).variationLevel, 0);
+  assert.equal(reader.getMove(1).variations[0].index, 0);
+  assert.equal(reader.getMove(0).variationLevel, 1);
+});
 
-upvotingLines(
-  "should handle first move variations, upvote second line",
-  (context) => {
-    let reader = new PgnReader({ pgn: context.pgn2 });
-    assert.equal(reader.getMoves().length, 6);
+upvotingLines("should handle first move variations, upvote second line", (context) => {
+  let reader = new PgnReader({ pgn: context.pgn2 });
+  assert.equal(reader.getMoves().length, 6);
 
-    reader.promoteMove(3);
+  reader.promoteMove(3);
 
-    assert.equal(reader.getMove(3).variationLevel, 1);
-    assert.equal(reader.getMove(0).variations[0].index, 3);
-    assert.equal(reader.getMove(0).variationLevel, 0);
-  },
-);
+  assert.equal(reader.getMove(3).variationLevel, 1);
+  assert.equal(reader.getMove(0).variations[0].index, 3);
+  assert.equal(reader.getMove(0).variationLevel, 0);
+});
 
-upvotingLines(
-  "should handle non-first move variations, upvote of any line",
-  (context) => {
-    let reader = new PgnReader({ pgn: context.pgn2 });
-    assert.equal(reader.getMoves().length, 6);
+upvotingLines("should handle non-first move variations, upvote of any line", (context) => {
+  let reader = new PgnReader({ pgn: context.pgn2 });
+  assert.equal(reader.getMoves().length, 6);
 
-    reader.promoteMove(2);
+  reader.promoteMove(2);
 
-    assert.equal(reader.getMove(1).variationLevel, 0);
-    assert.equal(reader.getMove(1).variations[0].index, 0);
-    assert.equal(reader.getMove(0).variationLevel, 1);
-  },
-);
+  assert.equal(reader.getMove(1).variationLevel, 0);
+  assert.equal(reader.getMove(1).variations[0].index, 0);
+  assert.equal(reader.getMove(0).variationLevel, 1);
+});
 
-upvotingLines(
-  "should handle non-first move variations, upvote of any line 2",
-  (context) => {
-    let reader = new PgnReader({ pgn: context.pgn });
-    assert.equal(reader.getMoves().length, 7);
+upvotingLines("should handle non-first move variations, upvote of any line 2", (context) => {
+  let reader = new PgnReader({ pgn: context.pgn });
+  assert.equal(reader.getMoves().length, 7);
 
-    reader.promoteMove(4);
+  reader.promoteMove(4);
 
-    assert.equal(reader.getMove(3).variationLevel, 0);
-    assert.equal(reader.getMove(3).variations[0].index, 2);
-    assert.equal(reader.getMove(2).variationLevel, 1);
-    assert.equal(reader.getMove(0).variationLevel, 0);
-  },
-);
+  assert.equal(reader.getMove(3).variationLevel, 0);
+  assert.equal(reader.getMove(3).variations[0].index, 2);
+  assert.equal(reader.getMove(2).variationLevel, 1);
+  assert.equal(reader.getMove(0).variationLevel, 0);
+});
 
 upvotingLines.run();
 
@@ -1528,20 +1374,17 @@ searchingMoves("should find an existing move based on san", () => {
   assert.equal(reader.san(move), "d5");
 });
 
-searchingMoves(
-  "should find an existing move based on the index of the move",
-  () => {
-    const reader = new PgnReader({ pgn: "e4 e5 Nf3 Nc6 Bc4 Bc5" });
-    let move = reader.findMove(1);
-    assert.equal(reader.san(move), "e4");
+searchingMoves("should find an existing move based on the index of the move", () => {
+  const reader = new PgnReader({ pgn: "e4 e5 Nf3 Nc6 Bc4 Bc5" });
+  let move = reader.findMove(1);
+  assert.equal(reader.san(move), "e4");
 
-    move = reader.findMove(3);
-    assert.equal(reader.san(move), "Nf3");
+  move = reader.findMove(3);
+  assert.equal(reader.san(move), "Nf3");
 
-    move = reader.findMove(6);
-    assert.equal(reader.san(move), "Bc5");
-  },
-);
+  move = reader.findMove(6);
+  assert.equal(reader.san(move), "Bc5");
+});
 
 searchingMoves.run();
 
@@ -1619,9 +1462,7 @@ workingWithNags('should understand $10, $11, $12 as "="', () => {
 
 workingWithNags.run();
 
-const addArrowsAndCircles = suite(
-  "When having a game and wanting to add arrows and circles",
-);
+const addArrowsAndCircles = suite("When having a game and wanting to add arrows and circles");
 
 addArrowsAndCircles("should understand how to set arrows", () => {
   let reader: PgnReader = new PgnReader({ pgn: "e4" });
@@ -1676,11 +1517,7 @@ specialCharacters("should ignore more spaces at beginning and end", () => {
 
 specialCharacters("should handle BOM on the beginning of games", () => {
   const reader = new PgnReader({
-    pgn:
-      '\uFEFF[Event ""]\n' +
-      '[Setup "1"]\n' +
-      '[FEN "4r1k1/1q3ppp/p7/8/Q3r3/8/P4PPP/R3R1K1 w - - 0 1"]\n' +
-      "1. Qxe8+ {} Rxe8 2. Rxe8# *\n",
+    pgn: '\uFEFF[Event ""]\n' + '[Setup "1"]\n' + '[FEN "4r1k1/1q3ppp/p7/8/Q3r3/8/P4PPP/R3R1K1 w - - 0 1"]\n' + "1. Qxe8+ {} Rxe8 2. Rxe8# *\n",
   });
 
   assert.ok(reader);
@@ -1697,13 +1534,27 @@ pgnNotationErrors("should read wrong chess moves in PGN by matching", () => {
   }, "No legal move: d5");
 });
 
-pgnNotationErrors(
-  "should read syntactically wrong PGN by throwing SyntaxError",
-  () => {
-    assert.throws(() => {
-      new PgnReader({ pgn: "ddd3" }).loadPgn();
-    }, 'Expected [1-8] but "d" found.');
-  },
-);
+pgnNotationErrors("should read syntactically wrong PGN by throwing SyntaxError", () => {
+  assert.throws(() => {
+    new PgnReader({ pgn: "ddd3" }).loadPgn();
+  }, 'Expected [1-8] but "d" found.');
+});
 
 pgnNotationErrors.run();
+
+const pgnNullMoves = suite("When pgn notation contains null moves");
+
+pgnNullMoves("should read null moves (--)", () => {
+  const reader = new PgnReader({ pgn: "1. e4 -- 2. Nf3 -- 3. Bc4 -- 4. O-O" });
+  assert.equal(reader.getMoves().length, 7);
+});
+pgnNullMoves("should read null moves (Z0)", () => {
+  const reader = new PgnReader({ pgn: "1. e4 Z0 2. Nf3 Z0 3. Bc4 Z0 4. O-O" });
+  assert.equal(reader.getMoves().length, 7);
+});
+pgnNullMoves("should read null moves at the beginning", () => {
+  const reader = new PgnReader({ pgn: "1. -- e5 2. -- Nf6 3. -- Bc5 4. -- O-O" });
+  assert.equal(reader.getMoves().length, 8);
+});
+
+pgnNullMoves.run();
