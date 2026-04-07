@@ -6,16 +6,21 @@
     "declaration": true,
     "declarationMap": true,
     "forceConsistentCasingInFileNames": true,
-    "ignoreDeprecations": "5.0",
+    "ignoreDeprecations": "6.0",
     "module": "CommonJS",
     "moduleResolution": "Node",
+    "noImplicitAny": false,
     //    "noImplicitReturns": true,
+    "noImplicitThis": false,
     "noFallthroughCasesInSwitch": true,
+    "strictNullChecks": false,
     "outDir": "lib",
+    "rootDir": "src",
     "skipLibCheck": true,
     // "suppressImplicitAnyIndexErrors": true,  // Not possible any more with TypeScript 5.8
     "sourceMap": true,
-    "target": "ES6"
+    "target": "ES6",
+    "types": ["node"]
   },
   "files": [
     "./src/api.ts",
