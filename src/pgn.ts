@@ -3,7 +3,7 @@ import { Color, Field, GameComment, Message, PgnReaderMove, PgnGame, PgnMove, Pg
 import { writeGame } from "@mliebelt/pgn-writer";
 // import { PROMOTIONS, SAN, FEN} from "@mliebelt/pgn-types";
 import { SAN, FEN } from "./types";
-import { Chess } from "chess.js";
+import { Chess, Move, SQUARES } from "chess.js";
 import * as nag from "./nag";
 import { PgnReaderConfiguration, PrimitiveMove, Shape } from "./types";
 import { ViewApi } from "./api";
@@ -62,9 +62,38 @@ export class PgnReader {
     }
 
     this.configuration = initializeConfiguration(configuration);
-    this.chess = Chess();
+    this.chess = new Chess();
     if (!this.configuration.lazyLoad || this.configuration.mode === "board") {
       this.loadPgn();
+    }
+  }
+  /**
+   * Loads a FEN position without throwing. Since chess.js 1.0 `load()` throws
+   * instead of returning false for invalid positions.
+   * @param fen the position to load
+   * @return {boolean} false if the position is invalid
+   */
+  private loadFen(fen: FEN): boolean {
+    try {
+      this.chess.load(fen);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  /**
+   * Executes a move without throwing. Since chess.js 1.0 `move()` throws instead
+   * of returning null for illegal or unparseable moves.
+   * @param move the move in SAN, LAN, or `{from, to}` form
+   * @param strict strict SAN parsing; false keeps the lenient behavior that was the
+   * default in chess.js 0.x (it accepted LAN like "e2e4"), true replaces the old `{sloppy: false}`
+   * @return {Move | null} the move played, or null if not possible
+   */
+  private tryMove(move: string | { from: string; to: string; promotion?: string }, strict = false): Move | null {
+    try {
+      return this.chess.move(move, { strict });
+    } catch (e) {
+      return null;
     }
   }
   /**
@@ -80,8 +109,8 @@ export class PgnReader {
       return fig;
     }
     let prevMovePosition: string = move.prev ? this.getMove(move.prev).fen : this.setToStart();
-    this.chess.load(prevMovePosition);
-    let prettySan = this.chess.move({ from: move.from, to: move.to });
+    this.loadFen(prevMovePosition);
+    let prettySan = this.tryMove({ from: move.from, to: move.to });
     if (prettySan && this.configuration.notation != "long") {
       // console.log("Found SAN: " + prettySan.san)
       return prettySan.san;
@@ -193,11 +222,11 @@ export class PgnReader {
   possibleMoves(move: number | string): Map<Field, Field[]> {
     let _fen = typeof move === "number" ? this.getMove(move as undefined as number).fen : move;
     const dests = new Map();
-    if (!this.chess.load(_fen)) {
+    if (!this.loadFen(_fen)) {
       // Not a valid position, no move possible
       return dests;
     }
-    this.chess.SQUARES.forEach((s) => {
+    SQUARES.forEach((s) => {
       const ms = this.chess.moves({ square: s, verbose: true });
       if (ms.length)
         dests.set(
@@ -454,7 +483,7 @@ export class PgnReader {
     if (this.configuration.position === "start") {
       this.chess.reset();
     } else {
-      this.chess.load(this.configuration.position);
+      this.loadFen(this.configuration.position);
     }
     return this.chess.fen();
   }
@@ -534,7 +563,7 @@ export class PgnReader {
         // TODO: Use the position from the configuration, to ensure, this games
         // could be played not starting at the start position.
         if (typeof _move.prev == "number") {
-          this.chess.load(this.getMove(_move.prev).fen);
+          this.loadFen(this.getMove(_move.prev).fen);
         } else {
           this.setToStart();
         }
@@ -552,9 +581,9 @@ export class PgnReader {
           // TODO: It is not possible to use here `san` instead of  the ugly `notation.notation`. In case of `Pe4`
           // chess.js spits an error. No solution for this yet.
           // The current lib sometimes has failures sloppy == true (like bxc6 which is legal), therefore the duplication.
-          let pgn_move = this.chess.move(_move.notation.notation, { sloppy: false });
+          let pgn_move = this.tryMove(_move.notation.notation, true);
           if (pgn_move === null) {
-            pgn_move = this.chess.move(_move.notation.notation, { sloppy: true });
+            pgn_move = this.tryMove(_move.notation.notation, false);
             if (pgn_move === null) {
               throw new Error("No legal move: " + _move.notation.notation);
             }
@@ -569,9 +598,9 @@ export class PgnReader {
           if (pgn_move.flags === "c") {
             _move.notation.strike = "x";
           }
-          if (this.chess.in_checkmate()) {
+          if (this.chess.isCheckmate()) {
             _move.notation.check = "#";
-          } else if (this.chess.in_check()) {
+          } else if (this.chess.isCheck()) {
             _move.notation.check = "+";
           }
           _move.moveNumber = getMoveNumberFromPosition(fen);
@@ -596,7 +625,7 @@ export class PgnReader {
         return this.getMove(0).notation.notation;
       };
       this.setToStart();
-      let pgn_move = this.chess.move(move);
+      let pgn_move = this.tryMove(move as string);
       if (!pgn_move) {
         return null;
       } else if (first_move_notation() === pgn_move.san) {
@@ -625,8 +654,9 @@ export class PgnReader {
       if (moveNumber == null) return existingFirstMove(move);
       let prevMove = this.getMove(moveNumber);
       if (typeof prevMove == "undefined") return null;
-      this.chess.load(prevMove.fen);
-      let pgn_move = this.chess.move(move);
+      this.loadFen(prevMove.fen);
+      let pgn_move = this.tryMove(move as string);
+      if (pgn_move === null) return null;
       let nextMove = this.getMove(prevMove.next);
       if (typeof nextMove == "undefined") return null;
       if (nextMove.notation.notation === pgn_move.san) {
@@ -683,7 +713,7 @@ export class PgnReader {
       realMove.turn = this.chess.turn();
       realMove.moveNumber = 1;
     } else {
-      this.chess.load(this.getMove(moveNumber).fen);
+      this.loadFen(this.getMove(moveNumber).fen);
       realMove.turn = getTurn(moveNumber);
       if (realMove.turn === "w") {
         realMove.moveNumber = this.getMove(moveNumber).moveNumber + 1;
@@ -691,7 +721,10 @@ export class PgnReader {
         realMove.moveNumber = this.getMove(moveNumber).moveNumber;
       }
     }
-    let pgn_move = this.chess.move(move as unknown as string);
+    let pgn_move = this.tryMove(move as unknown as string);
+    if (pgn_move === null) {
+      throw new Error("No legal move: " + move);
+    }
     realMove.fen = this.chess.fen();
     realMove.from = pgn_move.from;
     realMove.to = pgn_move.to;
@@ -707,12 +740,12 @@ export class PgnReader {
       if (pgn_move.promotion) {
         realMove.notation.promotion = "=" + pgn_move.promotion.toUpperCase();
       }
-      if (pgn_move.flags.includes(this.chess.FLAGS.CAPTURE) || pgn_move.flags.includes(this.chess.FLAGS.EP_CAPTURE)) {
+      if (pgn_move.flags.includes("c") || pgn_move.flags.includes("e")) {
         realMove.notation.strike = "x";
       }
-      realMove.notation.ep = pgn_move.flags.includes(this.chess.FLAGS.EP_CAPTURE);
-      if (this.chess.in_check()) {
-        if (this.chess.in_checkmate()) {
+      realMove.notation.ep = pgn_move.flags.includes("e");
+      if (this.chess.isCheck()) {
+        if (this.chess.isCheckmate()) {
           realMove.notation.check = "#";
         } else {
           realMove.notation.check = "+";
