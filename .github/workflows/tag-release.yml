@@ -1,0 +1,129 @@
+# Automatic release tagging.
+#
+# When a commit with a message like "Prepare release 1.2.31" or "new release
+# 1.2.31" lands on main, this workflow creates the annotated tag v1.2.31 on
+# exactly that commit and pushes it. As a safety net the version found in the
+# commit message must match the version in package.json of that commit,
+# otherwise the run fails loudly instead of tagging something wrong.
+#
+# The manual trigger (Actions page -> "Run workflow") allows tagging a release
+# commit by hand, e.g. to catch up the releases that happened before this
+# workflow existed.
+name: Tag release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to tag, e.g. 1.2.31"
+        required: true
+        type: string
+      sha:
+        description: "Commit SHA to tag (defaults to the newest commit on the selected branch)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Find release version and commit
+        id: release
+        env:
+          COMMITS: ${{ toJSON(github.event.commits) }}
+          HEAD_MESSAGE: ${{ github.event.head_commit.message }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_SHA: ${{ inputs.sha }}
+        run: |
+          set -euo pipefail
+          if [ -n "${INPUT_VERSION:-}" ]; then
+            # Manual input is used directly later, so it must be plain X.Y.Z / hex.
+            if ! printf '%s' "$INPUT_VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "::error::Version must look like 1.2.31, got: $INPUT_VERSION"
+              exit 1
+            fi
+            if [ -n "${INPUT_SHA:-}" ] && ! printf '%s' "$INPUT_SHA" | grep -qE '^[0-9a-fA-F]{7,40}$'; then
+              echo "::error::SHA must be a hex commit hash, got: $INPUT_SHA"
+              exit 1
+            fi
+            echo "Manual run, using given version." >&2
+            echo "version=$INPUT_VERSION" >> "$GITHUB_OUTPUT"
+            echo "sha=${INPUT_SHA:-$GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          RE='(?i)(?:prepare release|new release) (?<v>[0-9]+\.[0-9]+\.[0-9]+)'
+          found=$(printf '%s' "${COMMITS:-}" | jq -r --arg re "$RE" \
+            '[ . // [] | .[]
+               | select(.message | test($re))
+               | "\(.id) \(.message | capture($re).v)"
+             ] | (last // "")')
+          # Fallback: GitHub truncates the commit list in the event payload to
+          # 20 entries, so also look into the head commit message (for a merged
+          # pull request that contains the pull request title).
+          if [ -z "$found" ] && [ -n "${HEAD_MESSAGE:-}" ]; then
+            head_version=$(printf '%s' "$HEAD_MESSAGE" \
+              | grep -oiP '(prepare release|new release) \K[0-9]+\.[0-9]+\.[0-9]+' | tail -1 || true)
+            if [ -n "$head_version" ]; then
+              found="$GITHUB_SHA $head_version"
+            fi
+          fi
+          if [ -z "$found" ]; then
+            echo "No release commit in this push, nothing to do."
+            exit 0
+          fi
+          set -- $found
+          if ! printf '%s' "$1" | grep -qE '^[0-9a-f]{7,40}$' \
+            || ! printf '%s' "$2" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Unexpected format in found match: $found"
+            exit 1
+          fi
+          echo "sha=$1" >> "$GITHUB_OUTPUT"
+          echo "version=$2" >> "$GITHUB_OUTPUT"
+          echo "Found release commit ${1:0:7} for version $2." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check if the tag already exists
+        id: existing
+        if: steps.release.outputs.version != ''
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          if git ls-remote --exit-code --tags "https://github.com/$REPOSITORY" \
+               "refs/tags/v$VERSION" > /dev/null; then
+            echo "Tag v$VERSION exists already, nothing to do."
+            echo "Tag v$VERSION already existed." >> "$GITHUB_STEP_SUMMARY"
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check out the release commit
+        if: steps.release.outputs.version != '' && steps.existing.outputs.found != 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.release.outputs.sha }}
+          fetch-depth: 1
+
+      - name: Verify version and create the tag
+        if: steps.release.outputs.version != '' && steps.existing.outputs.found != 'true'
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          if ! printf '%s' "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Internal error, unexpected version format: $VERSION"
+            exit 1
+          fi
+          actual=$(node -p "require('./package.json').version")
+          if [ "$actual" != "$VERSION" ]; then
+            echo "::error::Commit message says $VERSION, but package.json of that commit says $actual - refusing to tag."
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin "refs/tags/v$VERSION"
+          echo "Tag v$VERSION created and pushed." >> "$GITHUB_STEP_SUMMARY"
