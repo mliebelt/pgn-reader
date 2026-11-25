@@ -57,16 +57,21 @@ jobs:
             exit 0
           fi
           RE='(?i)(?:prepare release|new release) (?<v>[0-9]+\.[0-9]+\.[0-9]+)'
+          # Match only the commit SUBJECT (first line) - example text about
+          # release messages inside a commit body must not trigger anything.
           found=$(printf '%s' "${COMMITS:-}" | jq -r --arg re "$RE" \
             '[ . // [] | .[]
-               | select(.message | test($re))
-               | "\(.id) \(.message | capture($re).v)"
+               | (.message | split("\n")[0]) as $subject
+               | select($subject | test($re))
+               | "\(.id) \($subject | capture($re).v)"
              ] | (last // "")')
           # Fallback: GitHub truncates the commit list in the event payload to
-          # 20 entries, so also look into the head commit message (for a merged
-          # pull request that contains the pull request title).
+          # 20 entries, so also look into the head commit message. For a merged
+          # pull request the title sits on the third line of that message
+          # ("Merge pull request #N ..." / empty line / title), so check the
+          # first three lines only - not the body.
           if [ -z "$found" ] && [ -n "${HEAD_MESSAGE:-}" ]; then
-            head_version=$(printf '%s' "$HEAD_MESSAGE" \
+            head_version=$(printf '%s' "$HEAD_MESSAGE" | head -n 3 \
               | grep -oiP '(prepare release|new release) \K[0-9]+\.[0-9]+\.[0-9]+' | tail -1 || true)
             if [ -n "$head_version" ]; then
               found="$GITHUB_SHA $head_version"
