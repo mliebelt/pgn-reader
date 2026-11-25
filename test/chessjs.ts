@@ -5,16 +5,16 @@ import { Chess } from 'chess.js';
 
 const chessjs = suite('chess.js');
 
-chessjs('evaluates move with sloppy', () => {
+chessjs('evaluates move leniently (strict: false, was sloppy in 0.x)', () => {
     const chess = new Chess();
     chess.load('r1bqkbnr/ppp1pppp/2P5/8/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 3');
 
-    const move = chess.move('bxc6', { sloppy: true });
+    const move = chess.move('bxc6', { strict: false });
 
-    // assert.is(move, null);   // Seems to be fixed in version 0.12.1
+    assert.is(move.san, 'bxc6');
 });
 
-chessjs('evaluates move without sloppy', () => {
+chessjs('evaluates move in strict mode', () => {
     const chess = new Chess();
     chess.load('r1bqkbnr/ppp1pppp/2P5/8/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 3');
 

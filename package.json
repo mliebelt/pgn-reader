@@ -32,13 +32,12 @@
     "@mliebelt/pgn-parser": "^1.4.16",
     "@mliebelt/pgn-types": "^1.0.4",
     "@mliebelt/pgn-writer": "^1.0.5",
-    "chess.js": "^0.12.1",
+    "chess.js": "^1.4.0",
     "sync-fetch": "^0.7.1"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^29.0.2",
     "@rollup/plugin-node-resolve": "16.0.3",
-    "@types/chess.js": "^0.11.2",
     "@types/node": "^26.0.0",
     "rollup": "^4.9.4",
     "rollup-plugin-dts": "^6.4.1",
