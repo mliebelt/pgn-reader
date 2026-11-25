@@ -1,6 +1,8 @@
 import { suite } from "uvu";
 import * as assert from "uvu/assert";
 
+import { inspect } from "util";
+
 import { PgnReader, Shape } from "../src";
 import { readFile } from "../src/fetch";
 import { PgnReaderMove } from "@mliebelt/pgn-types";
@@ -1558,3 +1560,15 @@ pgnNullMoves("should read null moves at the beginning", () => {
 });
 
 pgnNullMoves.run();
+
+const pgnNewChessJsVersion = suite("When pgn uses the new Chess.js version");
+
+// The following checks the working of https://github.com/mliebelt/pgn-reader/issues/253
+// Had to upgrade to chess.js version == 1.4.x to have that.
+pgnNewChessJsVersion("Should read pgn, and have correct information about ", () => {
+  const reader = new PgnReader({ pgn: "1.d4 Nf6 2.Bf4 g6 3.Nf3 Bg7 4.e3 O-O 5.Be2 d6 6.O-O c5 7.c3 Qb6 8.Qb3 Be6 9.Qa3 Nc6 10.h3 cxd4 11.exd4 a5" });
+  // console.log(inspect(reader.getMove(21), { depth: 5, colors: true }));
+  assert.equal(reader.getMove(21).fen, "r4rk1/1p2ppbp/1qnpbnp1/p7/3P1B2/Q1P2N1P/PP2BPP1/RN3RK1 w - - 0 12")
+});
+
+pgnNewChessJsVersion.run();
