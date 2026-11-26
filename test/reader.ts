@@ -1009,6 +1009,18 @@ manyGames("should ensure switching games works", () => {
   assert.equal(reader.san(reader.getMove(0)), "c4");
 });
 
+manyGames("should ensure loading a game with variations twice works (#259)", () => {
+  const reader = new PgnReader({
+    pgn: "1. e4 e5 (1... c5 2. Nf3) 2. Nf3 *\n\n1. d4 d5 *",
+    manyGames: true,
+  });
+  reader.loadOne(1);
+  reader.loadOne(0);
+  assert.equal(reader.getMoves().length, 5);
+  assert.equal(reader.san(reader.getMove(2)), "c5");
+  assert.equal(reader.getMove(1).variations.length, 1);
+});
+
 manyGames("should ensure lazyLoad and loadOne works", () => {
   const reader = new PgnReader({
     pgn: "e4 * d4 * c4 *",

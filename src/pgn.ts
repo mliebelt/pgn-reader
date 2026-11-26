@@ -196,7 +196,8 @@ export class PgnReader {
     this.currentGameIndex = typeof game === "number" ? game : 0;
     let _game: ParseTree = typeof game === "number" ? this.games[game] : (game as ParseTree);
     interpretHeaders(_game);
-    this.readMoves(_game.moves);
+    // Read a copy, readMoves changes the moves in place (#259)
+    this.readMoves(structuredClone(_game.moves));
     if (this.configuration.startPlay && this.configuration.hideMovesBefore) {
       let new_fen = this.deleteMovesBefore(this.configuration.startPlay);
       let new_pgn = this.writePgn();
